@@ -1,8 +1,7 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Geen token' });
 
-  // Haal gestarrde segmenten op van de ingelogde atleet
   const r = await fetch('https://www.strava.com/api/v3/segments/starred?per_page=50', {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -11,21 +10,20 @@ export default async function handler(req, res) {
 
   const segments = await r.json();
 
-  // Stuur alleen wat we nodig hebben terug
   const clean = segments.map(s => ({
-    id:           s.id,
-    name:         s.name,
-    distance:     s.distance,
-    elevation:    s.total_elevation_gain,
-    avgGrade:     s.average_grade,
-    type:         s.activity_type,
-    startLat:     s.start_latlng?.[0],
-    startLng:     s.start_latlng?.[1],
-    endLat:       s.end_latlng?.[0],
-    endLng:       s.end_latlng?.[1],
-    prTime:       s.athlete_pr_effort?.elapsed_time,
-    komTime:      s.xoms?.kom,
+    id:        s.id,
+    name:      s.name,
+    distance:  s.distance,
+    elevation: s.total_elevation_gain,
+    avgGrade:  s.average_grade,
+    type:      s.activity_type,
+    startLat:  s.start_latlng?.[0],
+    startLng:  s.start_latlng?.[1],
+    endLat:    s.end_latlng?.[0],
+    endLng:    s.end_latlng?.[1],
+    prTime:    s.athlete_pr_effort?.elapsed_time,
+    komTime:   s.xoms?.kom,
   }));
 
   res.status(200).json(clean);
-}
+};
