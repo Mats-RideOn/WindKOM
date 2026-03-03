@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { code, error } = req.query;
 
   if (error || !code) {
@@ -22,14 +22,13 @@ export default async function handler(req, res) {
     return res.redirect('/?error=token_failed');
   }
 
-  // Stuur token + athlete info terug naar de frontend via URL fragment
   const athlete = encodeURIComponent(JSON.stringify({
-    id:         data.athlete.id,
-    firstname:  data.athlete.firstname,
-    lastname:   data.athlete.lastname,
-    profile:    data.athlete.profile_medium,
-    token:      data.access_token,
+    id:        data.athlete.id,
+    firstname: data.athlete.firstname,
+    lastname:  data.athlete.lastname,
+    profile:   data.athlete.profile_medium,
+    token:     data.access_token,
   }));
 
   res.redirect(`/?athlete=${athlete}`);
-}
+};
