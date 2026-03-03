@@ -1,4 +1,4 @@
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   const clientId = process.env.STRAVA_CLIENT_ID;
   const redirectUri = process.env.REDIRECT_URI;
 
@@ -11,4 +11,4 @@ export default function handler(req, res) {
     `&scope=read,activity:read`;
 
   res.redirect(url);
-}
+};
