@@ -46,12 +46,16 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .wind-stat .val{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:900;color:var(--accent);line-height:1}
 .wind-stat .unit{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 .wind-stat .label{font-size:12px;color:var(--muted);margin-top:2px}
-.compass-ring{width:82px;height:82px;border-radius:50%;border:2px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center}
-.compass-letters{position:absolute;inset:0;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:var(--muted)}
-.compass-letters span{position:absolute;transform:translate(-50%,-50%)}
-.compass-letters .n{top:8px;left:50%}.compass-letters .s{bottom:2px;left:50%}.compass-letters .e{right:1px;top:50%}.compass-letters .w{left:8px;top:50%}
-.compass-arrow{width:3px;height:30px;background:linear-gradient(to bottom,var(--accent) 50%,rgba(107,114,128,.4) 50%);border-radius:2px;transform-origin:center;transform:rotate(270deg);transition:transform 1.2s cubic-bezier(.34,1.56,.64,1);position:relative;z-index:2}
-.compass-dot{position:absolute;width:7px;height:7px;background:var(--accent);border-radius:50%;z-index:3}
+/* KOMPAS */
+.compass-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.compass-svg-wrap{position:relative;width:110px;height:110px}
+.compass-svg-wrap svg{width:110px;height:110px}
+.compass-dir-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--accent);letter-spacing:1px;text-align:center;text-transform:uppercase}
+/* WIND RICHTING BANNER */
+.wind-dir-big{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:100px}
+.wind-dir-arrow{font-size:40px;line-height:1;transition:transform 1s cubic-bezier(.34,1.56,.64,1)}
+.wind-dir-name{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:var(--text);line-height:1}
+.wind-dir-full{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 .forecast-pills{display:flex;gap:8px}
 .forecast-pill{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center;cursor:pointer;transition:all .2s;min-width:84px}
 .forecast-pill:hover,.forecast-pill.active{border-color:var(--accent);background:rgba(245,166,35,.08)}
@@ -257,25 +261,60 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
       <div class="meta" id="currentDate">—</div>
       <span class="gust-chip" id="gustLabel">Windstoten: —</span>
     </div>
+
     <div class="wind-stats">
+      <!-- Windsnelheid -->
       <div class="wind-stat">
         <div class="val" id="windSpeed">—</div>
         <div class="unit">km/u</div>
         <div class="label">Windsnelheid</div>
       </div>
-      <div class="compass-ring">
-        <div class="compass-letters">
-          <span class="n">N</span><span class="s">Z</span><span class="e">O</span><span class="w">W</span>
+
+      <!-- SVG Kompas -->
+      <div class="compass-wrap">
+        <div class="compass-svg-wrap">
+          <svg viewBox="0 0 110 110" id="compassSvg">
+            <!-- Achtergrond cirkel -->
+            <circle cx="55" cy="55" r="52" fill="#181c22" stroke="#232830" stroke-width="2"/>
+            <!-- Streepjes elke 30° -->
+            <g stroke="#2d3340" stroke-width="1">
+              <line x1="55" y1="6" x2="55" y2="16"/>
+              <line x1="55" y1="94" x2="55" y2="104"/>
+              <line x1="6" y1="55" x2="16" y2="55"/>
+              <line x1="94" y1="55" x2="104" y2="55"/>
+              <line x1="18.5" y1="18.5" x2="25.5" y2="25.5"/>
+              <line x1="84.5" y1="18.5" x2="91.5" y2="25.5"/>
+              <line x1="18.5" y1="91.5" x2="25.5" y2="84.5"/>
+              <line x1="84.5" y1="91.5" x2="91.5" y2="84.5"/>
+            </g>
+            <!-- Kompasletters -->
+            <text x="55" y="22" text-anchor="middle" fill="#f5a623" font-family="Barlow Condensed,sans-serif" font-size="11" font-weight="700">N</text>
+            <text x="55" y="100" text-anchor="middle" fill="#6b7280" font-family="Barlow Condensed,sans-serif" font-size="11" font-weight="700">Z</text>
+            <text x="98" y="59" text-anchor="middle" fill="#6b7280" font-family="Barlow Condensed,sans-serif" font-size="11" font-weight="700">O</text>
+            <text x="12" y="59" text-anchor="middle" fill="#6b7280" font-family="Barlow Condensed,sans-serif" font-size="11" font-weight="700">W</text>
+            <!-- Windpijl — draait mee met windrichting (vanwaar wind komt) -->
+            <g id="compassArrowGroup" transform="rotate(0 55 55)" style="transition:transform 1.2s cubic-bezier(.34,1.56,.64,1)">
+              <!-- Pijlpunt (oranje, kant vanwaar wind komt) -->
+              <polygon points="55,12 51,32 55,28 59,32" fill="#f5a623"/>
+              <!-- Staart (grijs) -->
+              <polygon points="55,98 51,78 55,82 59,78" fill="#2d3340"/>
+              <!-- Middenstip -->
+              <circle cx="55" cy="55" r="4" fill="#f5a623"/>
+            </g>
+          </svg>
         </div>
-        <div class="compass-arrow" id="compassArrow"></div>
-        <div class="compass-dot"></div>
+        <div class="compass-dir-label" id="compassDirLabel">— km/u</div>
       </div>
-      <div class="wind-stat">
-        <div class="val" style="font-size:26px" id="windDirLabel">—</div>
-        <div class="unit">Richting</div>
-        <div class="label" id="windDirFull">Laden…</div>
+
+      <!-- Windrichting tekst + grote pijl -->
+      <div class="wind-dir-big">
+        <div class="wind-dir-arrow" id="windDirArrow">→</div>
+        <div class="wind-dir-name" id="windDirLabel">—</div>
+        <div class="wind-dir-full" id="windDirFull">Laden…</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">wind komt uit het</div>
       </div>
     </div>
+
     <div class="forecast-pills" id="forecastPills">
       <div class="skeleton-card" style="width:84px;height:80px"><div class="skel" style="height:100%"></div></div>
       <div class="skeleton-card" style="width:84px;height:80px"><div class="skel" style="height:100%"></div></div>
@@ -469,6 +508,12 @@ function decodePolyline(encoded) {
 }
 
 // ─────────────────────────────────────────
+// Pijl die richting aangeeft vanwaar wind blaast (wind van N blaast naar Z = pijl ↓)
+function windDegToArrow(deg) {
+  const arrows = ['↓','↙','←','↖','↑','↗','→','↘'];
+  return arrows[Math.round(((deg + 22.5) % 360) / 45) % 8];
+}
+
 // WIND PER SEGMENT OPHALEN (Open-Meteo)
 // ─────────────────────────────────────────
 async function fetchWindForSegment(lat, lng) {
@@ -534,11 +579,16 @@ async function loadBannerWind(lat, lng) {
     const data = await res.json();
     const cur = data.current;
     const dir = degToDir(cur.wind_direction_10m);
+    const spd = Math.round(cur.wind_speed_10m);
+    const deg = Math.round(cur.wind_direction_10m);
 
-    document.getElementById('windSpeed').textContent = Math.round(cur.wind_speed_10m);
+    document.getElementById('windSpeed').textContent = spd;
     document.getElementById('windDirLabel').textContent = dir.label;
     document.getElementById('windDirFull').textContent = dir.full;
-    document.getElementById('compassArrow').style.transform = `rotate(${cur.wind_direction_10m}deg)`;
+    document.getElementById('windDirArrow').textContent = windDegToArrow(deg);
+    document.getElementById('windDirArrow').style.transform = `rotate(${deg}deg)`;
+    document.getElementById('compassArrowGroup').setAttribute('transform', `rotate(${deg} 55 55)`);
+    document.getElementById('compassDirLabel').textContent = `${spd} km/u uit ${dir.label}`;
     document.getElementById('gustLabel').textContent = `💨 Windstoten tot ${Math.round(cur.wind_gusts_10m)} km/u`;
 
     // Forecast pills
@@ -569,7 +619,10 @@ function selectForecastDay(pill) {
   document.getElementById('windSpeed').textContent = s;
   document.getElementById('windDirLabel').textContent = dir.label;
   document.getElementById('windDirFull').textContent = dir.full;
-  document.getElementById('compassArrow').style.transform = `rotate(${d}deg)`;
+  document.getElementById('windDirArrow').textContent = windDegToArrow(d);
+  document.getElementById('windDirArrow').style.transform = `rotate(${d}deg)`;
+  document.getElementById('compassArrowGroup').setAttribute('transform', `rotate(${d} 55 55)`);
+  document.getElementById('compassDirLabel').textContent = `${s} km/u uit ${dir.label}`;
   showToast('📅 Voorspelling geselecteerd', `Wind: ${s} km/u uit het ${dir.full.toLowerCase()} — segmentscores blijven op live data`);
 }
 
