@@ -114,7 +114,16 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .fav-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:4px;opacity:.35;transition:all .2s;line-height:1}
 .fav-btn:hover,.fav-btn.active{opacity:1;transform:scale(1.2)}
 
-/* WIND LOADING */
+/* AFSTANDSFILTER */
+.distance-filter{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 24px;margin-bottom:20px}
+.dist-filter-inner{display:flex;flex-direction:column;gap:10px}
+.dist-labels{display:flex;justify-content:space-between;align-items:center}
+.slider-track-wrap{position:relative;height:36px;display:flex;align-items:center}
+.slider-track{position:absolute;left:0;right:0;height:5px;background:var(--border);border-radius:3px;pointer-events:none}
+.slider-track-wrap input[type=range]{position:absolute;width:100%;height:5px;appearance:none;-webkit-appearance:none;background:transparent;pointer-events:all;cursor:pointer}
+.slider-track-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border:3px solid var(--bg);border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.slider-track-wrap input[type=range]::-moz-range-thumb{width:18px;height:18px;background:var(--accent);border:3px solid var(--bg);border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.slider-fill{position:absolute;height:5px;background:var(--accent);border-radius:3px;pointer-events:none}
 .wind-loading{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 .wind-loading-dot{width:5px;height:5px;background:var(--accent);border-radius:50%;animation:blink 1s infinite}
 .wind-loading-dot:nth-child(2){animation-delay:.2s}
@@ -304,6 +313,21 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
       <button class="filter-btn" onclick="filterSegs(this,'fav')">⭐ Favorieten</button>
     </div>
   </div>
+
+  <!-- AFSTANDSFILTER -->
+  <div class="distance-filter" id="distanceFilter" style="display:none">
+    <div class="dist-filter-inner">
+      <div class="dist-labels">
+        <span style="font-size:13px;color:var(--muted);font-weight:500">📏 Afstand</span>
+        <span id="distRangeLabel" style="font-size:13px;font-weight:600;color:var(--accent)">0 – 50 km</span>
+      </div>
+      <div class="slider-track-wrap">
+        <div class="slider-track" id="sliderTrack"></div>
+        <input type="range" id="sliderMin" min="0" max="50" value="0" step="0.5" oninput="updateDistSlider()">
+        <input type="range" id="sliderMax" min="0" max="50" value="50" step="0.5" oninput="updateDistSlider()">
+      </div>
+    </div>
+  </div>
   <div class="segments-grid" id="segmentsGrid">
     <div class="skeleton-card"><div class="skel" style="height:18px;width:55%;margin-bottom:10px"></div><div class="skel" style="height:11px;width:35%;margin-bottom:18px"></div><div class="skel" style="height:80px"></div></div>
     <div class="skeleton-card"><div class="skel" style="height:18px;width:65%;margin-bottom:10px"></div><div class="skel" style="height:11px;width:40%;margin-bottom:18px"></div><div class="skel" style="height:80px"></div></div>
@@ -379,21 +403,15 @@ function segmentBearing(sLat, sLng, eLat, eLng) {
 // KOM / PR
 // ─────────────────────────────────────────
 function parseKomTime(str) {
-  // Strava geeft KOM als "4:32" of "4:32 /km" of "1:04:32" — strip alles behalve cijfers en dubbele punten
   if (!str) return null;
-  const clean = str.replace(/[^0-9:]/g, '').trim();
-  if (!clean || !clean.includes(':')) return null;
-  const parts = clean.split(':');
-  if (parts.length === 2) {
-    const m = parseInt(parts[0]), s = parseInt(parts[1]);
-    if (isNaN(m) || isNaN(s)) return null;
-    return m * 60 + s;
-  }
-  if (parts.length === 3) {
-    const h = parseInt(parts[0]), m = parseInt(parts[1]), s = parseInt(parts[2]);
-    if (isNaN(h) || isNaN(m) || isNaN(s)) return null;
-    return h * 3600 + m * 60 + s;
-  }
+  // Strava geeft bv "4:32", "4:32 /km", "1:04:32", "2:15/mi"
+  // Pak het eerste patroon dat eruitziet als een tijd (cijfers met dubbele punten)
+  const match = str.match(/(\d{1,2}:\d{2}(:\d{2})?)/);
+  if (!match) return null;
+  const parts = match[1].split(':').map(Number);
+  if (parts.some(isNaN)) return null;
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
   return null;
 }
 
@@ -683,15 +701,69 @@ function changeRadius(km) {
   updateMapMarkers();
 }
 
-// ─────────────────────────────────────────
-// RENDER CARDS
-// ─────────────────────────────────────────
+let distMin = 0, distMax = 50; // km
+
+function initDistanceSlider() {
+  // Bepaal max op basis van langste segment
+  const maxDist = segments.length
+    ? Math.ceil(Math.max(...segments.map(s => (s.distance||0)/1000)) + 1)
+    : 50;
+  const cap = Math.max(maxDist, 5);
+
+  const sMin = document.getElementById('sliderMin');
+  const sMax = document.getElementById('sliderMax');
+  sMin.max = cap; sMax.max = cap;
+  sMax.value = cap;
+  distMin = 0; distMax = cap;
+  updateDistSlider();
+  document.getElementById('distanceFilter').style.display = 'block';
+}
+
+function updateDistSlider() {
+  const sMin = document.getElementById('sliderMin');
+  const sMax = document.getElementById('sliderMax');
+  let lo = parseFloat(sMin.value), hi = parseFloat(sMax.value);
+  const cap = parseFloat(sMax.max);
+
+  // Voorkom kruisen
+  if (lo > hi - 0.5) {
+    if (document.activeElement === sMin) { lo = hi - 0.5; sMin.value = lo; }
+    else { hi = lo + 0.5; sMax.value = hi; }
+  }
+  distMin = lo; distMax = hi;
+
+  // Vul het gekleurde stuk in
+  const pLo = (lo / cap) * 100;
+  const pHi = (hi / cap) * 100;
+  const track = document.getElementById('sliderTrack');
+  // Verwijder oude fill
+  track.parentElement.querySelectorAll('.slider-fill').forEach(e => e.remove());
+  const fill = document.createElement('div');
+  fill.className = 'slider-fill';
+  fill.style.left = pLo + '%';
+  fill.style.width = (pHi - pLo) + '%';
+  track.insertAdjacentElement('afterend', fill);
+
+  const loStr = lo < 1 ? `${Math.round(lo*1000)} m` : `${lo.toFixed(lo < 10 ? 1 : 0)} km`;
+  const hiStr = hi >= cap ? `${hi.toFixed(0)}+ km` : (hi < 1 ? `${Math.round(hi*1000)} m` : `${hi.toFixed(hi < 10 ? 1 : 0)} km`);
+  document.getElementById('distRangeLabel').textContent = `${loStr} – ${hiStr}`;
+
+  renderSegments(currentFilter);
+}
 function renderSegments(filter) {
   const grid = document.getElementById('segmentsGrid');
-  let list = segments.filter(s => s.windScore !== undefined); // alleen gescoorde segmenten
+  let list = segments.filter(s => s.windScore !== undefined);
   if (filter==='ideal') list = list.filter(s => s.status==='ideal');
   else if (filter==='good') list = list.filter(s => s.status==='good');
   else if (filter==='fav') list = list.filter(s => favs.has(s.id));
+
+  // Afstandsfilter
+  list = list.filter(s => {
+    const km = (s.distance || 0) / 1000;
+    const cap = parseFloat(document.getElementById('sliderMax')?.max || 50);
+    const isMax = distMax >= cap;
+    return km >= distMin && (isMax || km <= distMax);
+  });
 
   document.getElementById('segBadge').textContent = list.length;
 
@@ -707,22 +779,18 @@ function renderSegments(filter) {
     const komSecs = parseKomTime(s.komTime);
     const prSecs  = (s.prTime != null) ? parseInt(s.prTime) : null;
 
-    // Vier gevallen:
-    // 1. Geen PR én geen KOM → beide tonen als —
-    // 2. Geen PR, wel KOM → KOM tonen, verschil = "Geen PR"
-    // 3. Wel PR, geen KOM → PR tonen, verschil = "Geen KOM"
-    // 4. Beide → verschil berekenen, kroontje of +mm:ss
-
     const prDisplay  = prSecs  ? formatTime(prSecs)  : '—';
-    const komDisplay = komSecs ? formatTime(komSecs)  : (s.komTime || '—');
+    // komDisplay: als komSecs geparsed → netjes geformatteerd, anders toon raw string (bv "4:32 /km")
+    const komDisplay = komSecs ? formatTime(komSecs) : (s.komTime || '—');
 
     let deltaDisplay;
-    if (!prSecs && !komSecs) {
+    if (!prSecs && !s.komTime) {
       deltaDisplay = `<span style="color:var(--muted)">—</span>`;
     } else if (!prSecs) {
       deltaDisplay = `<span style="color:var(--muted)">Geen PR</span>`;
     } else if (!komSecs) {
-      deltaDisplay = `<span style="color:var(--muted)">Geen KOM</span>`;
+      // prTime bestaat maar KOM kan niet vergeleken worden
+      deltaDisplay = `<span style="color:var(--muted)">KOM onbekend</span>`;
     } else {
       const diff = prSecs - komSecs;
       if (diff <= 0) {
@@ -826,6 +894,7 @@ async function loadSegments(token) {
     const r = await fetch('/api/segments', {headers:{Authorization:`Bearer ${token}`}});
     if (!r.ok) throw new Error();
     segments = await r.json();
+    initDistanceSlider();
     // Initieel sorteren op afstand tot gebruiker
     segments.sort((a,b) => haversine(userLat,userLng,a.startLat||0,a.startLng||0) - haversine(userLat,userLng,b.startLat||0,b.startLng||0));
     // Kaart updaten (zonder scores nog)
