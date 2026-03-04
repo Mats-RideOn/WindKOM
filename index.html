@@ -8,10 +8,16 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-:root{--bg:#0a0c0f;--surface:#111418;--surface2:#181c22;--border:#232830;--accent:#f5a623;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;--text:#e8eaed;--muted:#6b7280;--strava:#fc4c02}
+:root{
+  --bg:#0a0c0f;--surface:#111418;--surface2:#181c22;--border:#232830;
+  --accent:#f5a623;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;
+  --text:#e8eaed;--muted:#6b7280;--strava:#fc4c02;
+}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(245,166,35,.05) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(232,93,4,.03) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+/* HEADER */
 header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;border-bottom:1px solid var(--border);background:rgba(10,12,15,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:500}
 .logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;letter-spacing:-.5px}
 .logo span{color:var(--accent)}
@@ -26,7 +32,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:18p
 .user-pill{display:none;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:24px;padding:6px 16px 6px 6px}
 .user-pill img{width:30px;height:30px;border-radius:50%}
 .user-pill span{font-size:14px;font-weight:500}
+
 main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:1}
+
 /* WIND BANNER */
 .wind-banner{background:linear-gradient(135deg,#1a1f28,#0f1318);border:1px solid var(--border);border-radius:12px;padding:24px 32px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative;overflow:hidden}
 .wind-banner::before{content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;background:radial-gradient(circle,rgba(245,166,35,.07) 0%,transparent 70%);border-radius:50%}
@@ -50,6 +58,7 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .fp-day{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 .fp-speed{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700}
 .fp-dir{font-size:12px;color:var(--accent)}
+
 /* SECTION */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .section-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:10px}
@@ -57,6 +66,7 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .filters{display:flex;gap:8px}
 .filter-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif}
 .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(245,166,35,.08)}
+
 /* CARDS */
 .segments-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(370px,1fr));gap:16px;margin-bottom:40px}
 .segment-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;position:relative;overflow:hidden;transition:all .25s;animation:slideIn .4s ease both;cursor:pointer;text-decoration:none;display:block;color:inherit}
@@ -69,6 +79,7 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .segment-rank{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--border);line-height:1;min-width:32px}
 .segment-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;line-height:1.2}
 .segment-type{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+.wind-chip-small{font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:2px 7px;border-radius:10px;color:var(--muted);margin-top:4px;display:inline-block}
 .status-badge{font-size:12px;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap;flex-shrink:0}
 .badge-ideal{background:rgba(46,204,113,.15);color:var(--green);border:1px solid rgba(46,204,113,.3)}
 .badge-good{background:rgba(243,156,18,.15);color:var(--yellow);border:1px solid rgba(243,156,18,.3)}
@@ -76,15 +87,17 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .card-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
 .stat-item .stat-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700}
 .stat-item .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
-/* KOM/PR VERGELIJKING */
-.kom-pr-row{background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:0}
+
+/* KOM/PR */
+.kom-pr-row{background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center}
 .kom-pr-item{flex:1;text-align:center}
 .kom-pr-item .kp-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;line-height:1}
 .kom-pr-item .kp-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
 .kom-pr-divider{width:1px;background:var(--border);height:36px;margin:0 12px}
-.kom-pr-delta{text-align:center;flex:0 0 auto;padding:0 8px}
-.kom-pr-delta .delta-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700}
-.kom-pr-delta .delta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.kom-pr-delta{text-align:center;flex:0 0 auto;padding:0 8px;min-width:110px}
+.kom-pr-delta .delta-val{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;line-height:1.2}
+.kom-pr-delta .delta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+
 /* WIND SCORE */
 .wind-score-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .wind-score-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
@@ -96,35 +109,62 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .wind-direction-chip{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
 .wind-dir-icon{width:24px;height:24px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px}
 .card-actions{display:flex;gap:8px;align-items:center}
-.strava-link{display:flex;align-items:center;gap:5px;background:rgba(252,76,2,.12);color:var(--strava);border:1px solid rgba(252,76,2,.25);padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;transition:all .2s;font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px}
+.strava-link{display:flex;align-items:center;gap:5px;background:rgba(252,76,2,.12);color:var(--strava);border:1px solid rgba(252,76,2,.25);padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;transition:all .2s;font-family:'Barlow Condensed',sans-serif}
 .strava-link:hover{background:rgba(252,76,2,.22);border-color:var(--strava)}
-.strava-link svg{width:13px;height:13px;fill:var(--strava)}
 .fav-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:4px;opacity:.35;transition:all .2s;line-height:1}
 .fav-btn:hover,.fav-btn.active{opacity:1;transform:scale(1.2)}
+
+/* WIND LOADING */
+.wind-loading{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.wind-loading-dot{width:5px;height:5px;background:var(--accent);border-radius:50%;animation:blink 1s infinite}
+.wind-loading-dot:nth-child(2){animation-delay:.2s}
+.wind-loading-dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+
 /* MAP */
 .map-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:32px}
-.map-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-#map{height:440px;z-index:1}
-/* Leaflet popup stijl */
+.map-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#map{height:480px;z-index:1}
 .leaflet-container{background:#f0f0f0}
-.leaflet-popup-content-wrapper{background:white;border:1px solid #e0e0e0;border-radius:10px;color:#1a1a1a;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.leaflet-popup-content-wrapper{background:white;border:1px solid #ddd;border-radius:10px;color:#111;box-shadow:0 8px 32px rgba(0,0,0,.15)}
 .leaflet-popup-tip{background:white}
-.leaflet-popup-content{margin:12px 16px;font-family:'Barlow',sans-serif}
-.leaflet-control-layers{background:white;border:1px solid #ddd;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px}
-.popup-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px;color:#111}
-.popup-score{font-size:13px;color:#555}
-.popup-score b{color:#111}
-.popup-strava{display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:var(--strava);color:white;padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;text-decoration:none;font-family:'Barlow Condensed',sans-serif}
+.leaflet-popup-content{margin:12px 16px;font-family:'Barlow',sans-serif;min-width:200px}
+.leaflet-control-layers{background:white;border:1px solid #ccc;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px}
+.popup-name{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;margin-bottom:6px;color:#111}
+.popup-row{font-size:13px;color:#444;margin-bottom:3px}
+.popup-row b{color:#111}
+.popup-strava{display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:var(--strava);color:white;padding:6px 14px;border-radius:5px;font-size:13px;font-weight:600;text-decoration:none;font-family:'Barlow Condensed',sans-serif}
 .radius-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-family:'Barlow',sans-serif;font-size:13px;cursor:pointer}
 .radius-select:focus{outline:none;border-color:var(--accent)}
+
 /* SKELETON */
 .skel{background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skeleton-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+
+/* LOCATION MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,12,15,.97);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(10px)}
+.modal-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:480px;width:90%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px}
+.modal-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+.loc-search-row{display:flex;gap:8px;margin-bottom:12px}
+.loc-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:15px}
+.loc-input:focus{outline:none;border-color:var(--accent)}
+.loc-search-btn{background:var(--accent);color:#000;border:none;padding:12px 20px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.loc-search-btn:hover{background:#e09000}
+.loc-results{list-style:none;margin-bottom:16px;max-height:200px;overflow-y:auto}
+.loc-result-item{padding:10px 14px;border-radius:8px;cursor:pointer;font-size:14px;transition:background .15s;border:1px solid transparent;margin-bottom:4px}
+.loc-result-item:hover{background:var(--surface2);border-color:var(--border)}
+.loc-result-item .loc-name{font-weight:500}
+.loc-result-item .loc-sub{font-size:12px;color:var(--muted)}
+.loc-gps-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.loc-gps-btn:hover{border-color:var(--accent);color:var(--accent)}
+.loc-error{font-size:13px;color:var(--red);margin-bottom:12px;display:none}
+
 /* LOGIN */
-.login-overlay{position:fixed;inset:0;background:rgba(10,12,15,.97);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(10px)}
+.login-overlay{position:fixed;inset:0;background:rgba(10,12,15,.97);display:flex;align-items:center;justify-content:center;z-index:900;backdrop-filter:blur(10px)}
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px;max-width:460px;width:90%;text-align:center;animation:popIn .5s cubic-bezier(.34,1.56,.64,1)}
-@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
 .login-logo{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;margin-bottom:8px}
 .login-logo span{color:var(--accent)}
 .login-tagline{color:var(--muted);font-size:15px;margin-bottom:32px;line-height:1.6}
@@ -134,6 +174,7 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .feature-list .icon{width:30px;height:30px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 .login-strava-btn{width:100%;background:var(--strava);color:white;border:none;padding:16px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none}
 .login-strava-btn:hover{background:#e03d00;transform:translateY(-2px);box-shadow:0 8px 24px rgba(252,76,2,.3)}
+
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:14px;z-index:2000;transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
 .toast.show{transform:translateY(0);opacity:1}
@@ -144,16 +185,16 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN OVERLAY -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-card">
     <div class="login-logo">Wind<span>KOM</span></div>
     <p class="login-tagline">Analyseer jouw Strava-segmenten op actueel windvoordeel.<br>Rij slimmer. Sla records.</p>
     <ul class="feature-list">
-      <li><div class="icon">🌬️</div> Live winddata &amp; 3-daagse voorspelling per segment</li>
+      <li><div class="icon">🌬️</div> Live winddata per segment op basis van exacte locatie</li>
       <li><div class="icon">🔥</div> Windvoordeel-score gesorteerd van beste naar slechtste</li>
-      <li><div class="icon">🏆</div> KOM vs jouw PR — zie hoeveel tijd je moet goedmaken</li>
-      <li><div class="icon">🗺️</div> Kaart met al jouw segmenten en windpijlen</li>
+      <li><div class="icon">🏆</div> KOM vs jouw PR — exact verschil in minuten en seconden</li>
+      <li><div class="icon">🗺️</div> Kaart met echte Strava-routes en windkleuren</li>
     </ul>
     <a class="login-strava-btn" href="/api/auth">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
@@ -162,11 +203,31 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
   </div>
 </div>
 
+<!-- LOCATIE MODAL -->
+<div class="modal-overlay" id="locationModal" style="display:none">
+  <div class="modal-card">
+    <div class="modal-title">📍 Kies jouw locatie</div>
+    <p class="modal-sub">WindKOM zoekt segmenten en winddata rondom deze locatie. Je kunt dit altijd aanpassen.</p>
+    <div class="loc-search-row">
+      <input class="loc-input" id="locInput" type="text" placeholder="Zoek stad of gemeente…" autocomplete="off">
+      <button class="loc-search-btn" onclick="searchLocation()">Zoek</button>
+    </div>
+    <div class="loc-error" id="locError">Locatie niet gevonden. Probeer een andere naam.</div>
+    <ul class="loc-results" id="locResults"></ul>
+    <button class="loc-gps-btn" onclick="useGPS()">
+      <span>🛰️</span> Gebruik mijn huidige GPS-locatie
+    </button>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header>
   <div class="logo">Wind<span>KOM</span><small>Segment Windanalyse</small></div>
   <div class="header-right">
     <div class="live-badge"><div class="live-dot"></div>LIVE — <span id="liveClock">--:--</span></div>
+    <button onclick="openLocationModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px">
+      📍 <span id="locationShort">Locatie</span>
+    </button>
     <div class="user-pill" id="userPill">
       <img id="userAvatar" src="" alt="avatar">
       <span id="userName">—</span>
@@ -212,11 +273,11 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
     </div>
   </div>
 
-  <!-- KAART -->
+  <!-- MAP -->
   <div class="map-section">
     <div class="map-header">
       <div class="section-title">🗺️ Kaartweergave</div>
-      <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <label style="font-size:13px;color:var(--muted)">Straal:</label>
         <select class="radius-select" id="radiusSelect" onchange="changeRadius(this.value)">
           <option value="5">5 km</option>
@@ -224,7 +285,7 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
           <option value="20">20 km</option>
           <option value="50">50 km</option>
         </select>
-        <span style="font-size:13px;color:var(--muted)" id="nearbyCount">— segmenten in straal</span>
+        <span style="font-size:13px;color:var(--muted)" id="nearbyCount"></span>
       </div>
     </div>
     <div id="map"></div>
@@ -256,33 +317,22 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 </div>
 
 <script>
-// ── HAVERSINE AFSTAND (km) ──
-function haversine(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLng = (lng2-lng1)*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function changeRadius(km) {
-  // Gebruik const RADIUS_KM niet meer, maak het dynamisch
-  window.RADIUS_KM_DYNAMIC = parseInt(km);
-  updateMapMarkers();
-}
-
-// Overschrijf RADIUS_KM dynamisch
-Object.defineProperty(window, 'RADIUS_KM', {
-  get: () => window.RADIUS_KM_DYNAMIC || 10,
-  configurable: true
-});
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
 let segments = [];
 let favs = new Set(JSON.parse(localStorage.getItem('windkom_favs') || '[]'));
 let currentFilter = 'all';
-let liveWindDeg = 270, liveWindSpeed = 15;
+let userLat = 51.05, userLng = 3.72; // Gent als fallback
+let userLocationName = 'Laden…';
+let RADIUS_KM = 10;
 let map = null, markers = [];
+let selectedSegId = null;
+let forecastMode = 'live'; // 'live' of index in forecast
 
-// ── RICHTINGEN ──
+// ─────────────────────────────────────────
+// RICHTINGEN
+// ─────────────────────────────────────────
 const DIRS = [
   {label:'N', full:'Noord',     arrow:'↑'},
   {label:'NO',full:'Noordoost', arrow:'↗'},
@@ -293,9 +343,11 @@ const DIRS = [
   {label:'W', full:'West',      arrow:'←'},
   {label:'NW',full:'Noordwest', arrow:'↖'},
 ];
-const degToDir = deg => DIRS[Math.round(((deg%360)+360)/45)%8];
+const degToDir = deg => DIRS[Math.round(((deg % 360) + 360) / 45) % 8];
 
-// ── WIND SCORE ──
+// ─────────────────────────────────────────
+// WIND BEREKENINGEN
+// ─────────────────────────────────────────
 function calcWindScore(windDeg, windSpeedKmh, segBearing) {
   const diff = ((windDeg - segBearing) + 360) % 360;
   const advantage = -Math.cos(diff * Math.PI / 180);
@@ -309,8 +361,8 @@ function windTypeLabel(windDeg, segBearing) {
   const d = degToDir(windDeg);
   if (diff >= 150 && diff <= 210) return `${d.arrow} Meewind`;
   if ((diff >= 120 && diff < 150)||(diff > 210 && diff <= 240)) return `${d.arrow} Lichte meewind`;
-  if (diff >= 60 && diff <= 120) return `${d.arrow} Zijwind`;
-  if (diff > 240 && diff <= 300) return `${d.arrow} Zijdelingse wind`;
+  if (diff >= 60 && diff <= 120) return `${d.arrow} Zijwind (rechts)`;
+  if (diff > 240 && diff <= 300) return `${d.arrow} Zijwind (links)`;
   return `${d.arrow} Tegenwind`;
 }
 
@@ -323,317 +375,124 @@ function segmentBearing(sLat, sLng, eLat, eLng) {
   return ((Math.atan2(y,x)*180/Math.PI)+360)%360;
 }
 
-function formatTime(secs) {
-  if (!secs) return '—';
-  const m = Math.floor(secs/60), s = secs%60;
-  return `${m}:${String(s).padStart(2,'0')}`;
-}
-
+// ─────────────────────────────────────────
+// KOM / PR
+// ─────────────────────────────────────────
 function parseKomTime(str) {
-  // Strava geeft KOM tijd als "4:32" string
   if (!str) return null;
-  const parts = str.replace(/[^0-9:]/g,'').split(':');
+  const clean = str.replace(/[^0-9:]/g,'');
+  const parts = clean.split(':');
   if (parts.length === 2) return parseInt(parts[0])*60 + parseInt(parts[1]);
   if (parts.length === 3) return parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2]);
   return null;
 }
 
-function timeDelta(prSecs, komSecs) {
-  if (!prSecs || !komSecs) return null;
-  return prSecs - komSecs; // positief = PR is trager dan KOM
+function formatTime(secs) {
+  if (!secs && secs !== 0) return '—';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function formatDelta(deltaSecs) {
+  // deltaSecs = prTime - komTime  (positief = trager dan KOM)
+  if (deltaSecs === null) return null;
+  if (deltaSecs <= 0) return '👑'; // PR = KOM of sneller
+  const m = Math.floor(deltaSecs / 60);
+  const s = deltaSecs % 60;
+  return `+${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
 function formatDist(m) {
   return m >= 1000 ? (m/1000).toFixed(1)+' km' : Math.round(m)+' m';
 }
 
-// ── SCORES HERBEREKENEN ──
-function recalcAll(windDeg, windSpeedKmh) {
-  segments.forEach(s => {
-    const bearing = segmentBearing(s.startLat, s.startLng, s.endLat, s.endLng);
-    s.bearing = bearing;
-    s.windScore = calcWindScore(windDeg, windSpeedKmh, bearing);
-    s.status = s.windScore >= 68 ? 'ideal' : s.windScore >= 38 ? 'good' : 'none';
-    s.windLabel = windTypeLabel(windDeg, bearing);
-    const delta = Math.round((s.windScore - 50) / 5);
-    s.prChance = (delta >= 0 ? '+' : '') + delta + '%';
-  });
-  // Sorteren op windvoordeel-score
-  segments.sort((a, b) => b.windScore - a.windScore);
+// ─────────────────────────────────────────
+// HAVERSINE
+// ─────────────────────────────────────────
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// ── KAART INITIALISEREN ──
-let tileLayers = {};
-let activeLayer = null;
-
-function initMap(lat, lng) {
-  userLat = lat; userLng = lng;
-
-  if (!map) {
-    map = L.map('map', { zoomControl: true, attributionControl: true }).setView([lat, lng], 13);
-
-    // Kaartlagen
-    tileLayers = {
-      'Licht (CartoDB)': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }),
-      'Fiets (OpenCycle)': L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { maxZoom: 19 }),
-      'Satelliet': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 }),
-      'Donker': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }),
-    };
-
-    // Standaard: lichte kaart (leesbaarst)
-    tileLayers['Licht (CartoDB)'].addTo(map);
-    activeLayer = tileLayers['Licht (CartoDB)'];
-
-    // Layer control
-    L.control.layers(tileLayers, {}, { position: 'topright', collapsed: false }).addTo(map);
-  } else {
-    map.setView([lat, lng], 13);
+// ─────────────────────────────────────────
+// POLYLINE DECODER
+// ─────────────────────────────────────────
+function decodePolyline(encoded) {
+  const pts = []; let i = 0, lat = 0, lng = 0;
+  while (i < encoded.length) {
+    let shift = 0, r = 0, b;
+    do { b = encoded.charCodeAt(i++)-63; r |= (b&0x1f)<<shift; shift+=5; } while(b>=0x20);
+    lat += (r&1)?~(r>>1):(r>>1); shift=0; r=0;
+    do { b = encoded.charCodeAt(i++)-63; r |= (b&0x1f)<<shift; shift+=5; } while(b>=0x20);
+    lng += (r&1)?~(r>>1):(r>>1);
+    pts.push([lat/1e5, lng/1e5]);
   }
-
-  // Verwijder oude locatiemarkering
-  if (window._userMarker) window._userMarker.remove();
-
-  // 10km cirkel
-  if (window._radiusCircle) window._radiusCircle.remove();
-  window._radiusCircle = L.circle([lat, lng], {
-    radius: RADIUS_KM * 1000,
-    color: '#f5a623', fillColor: '#f5a623',
-    fillOpacity: 0.04, weight: 1.5, dashArray: '6 6', opacity: 0.4,
-  }).addTo(map);
-
-  // Gebruikerslocation
-  const userIcon = L.divIcon({
-    html: `<div style="width:14px;height:14px;background:#f5a623;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #f5a62399"></div>`,
-    className: '', iconSize: [14,14], iconAnchor: [7,7]
-  });
-  window._userMarker = L.marker([lat, lng], {icon: userIcon})
-    .addTo(map).bindTooltip('📍 Jouw locatie', {permanent: false, direction: 'top'});
+  return pts;
 }
 
-function updateMapMarkers() {
-  markers.forEach(m => m.remove());
-  markers = [];
+// ─────────────────────────────────────────
+// WIND PER SEGMENT OPHALEN (Open-Meteo)
+// ─────────────────────────────────────────
+async function fetchWindForSegment(lat, lng) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}`
+    + `&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m`
+    + `&wind_speed_unit=kmh&timezone=Europe%2FBrussels`;
+  const r = await fetch(url);
+  const d = await r.json();
+  return {
+    speed: Math.round(d.current.wind_speed_10m),
+    deg:   Math.round(d.current.wind_direction_10m),
+    gusts: Math.round(d.current.wind_gusts_10m),
+  };
+}
 
-  // Alleen segmenten binnen 10km
+// Haal wind op voor alle segmenten tegelijk (parallel, max 20)
+async function loadWindPerSegment() {
   const nearby = segments.filter(s =>
     s.startLat && haversine(userLat, userLng, s.startLat, s.startLng) <= RADIUS_KM
+  ).slice(0, 20); // max 20 om rate limit te vermijden
+
+  if (nearby.length === 0) return;
+
+  showToast('🌬️ Wind ophalen…', `Wind per segment laden voor ${nearby.length} segmenten`);
+
+  const results = await Promise.allSettled(
+    nearby.map(s => fetchWindForSegment(
+      s.startLat + (s.endLat - s.startLat) / 2, // middelpunt segment
+      s.startLng + (s.endLng - s.startLng) / 2
+    ))
   );
 
-  nearby.forEach(s => {
-    const color = s.status === 'ideal' ? '#2ecc71' : s.status === 'good' ? '#f39c12' : '#e74c3c';
-
-    // Teken echte polyline als die beschikbaar is, anders rechte lijn
-    if (s.polyline && s.polyline.length > 0) {
-      const decoded = decodePolyline(s.polyline);
-      const line = L.polyline(decoded, {
-        color, weight: 5, opacity: 0.85,
-        lineCap: 'round', lineJoin: 'round'
-      }).addTo(map);
-      markers.push(line);
-    } else if (s.endLat) {
-      const line = L.polyline([[s.startLat, s.startLng],[s.endLat, s.endLng]], {
-        color, weight: 5, opacity: 0.7, dashArray: '8 6'
-      }).addTo(map);
-      markers.push(line);
+  results.forEach((res, i) => {
+    const s = nearby[i];
+    if (res.status === 'fulfilled') {
+      const w = res.value;
+      const bearing = segmentBearing(s.startLat, s.startLng, s.endLat, s.endLng);
+      s.segWindSpeed = w.speed;
+      s.segWindDeg   = w.deg;
+      s.windScore    = calcWindScore(w.deg, w.speed, bearing);
+      s.status       = s.windScore >= 68 ? 'ideal' : s.windScore >= 38 ? 'good' : 'none';
+      s.windLabel    = windTypeLabel(w.deg, bearing);
+      const delta = Math.round((s.windScore - 50) / 5);
+      s.prChance = (delta >= 0 ? '+' : '') + delta + '%';
     }
-
-    // Start-pin
-    const icon = L.divIcon({
-      html: `<div style="width:13px;height:13px;background:${color};border:2.5px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>`,
-      className: '', iconSize: [13,13], iconAnchor: [6,6]
-    });
-
-    const komSecs = parseKomTime(s.komTime);
-    const d = timeDelta(s.prTime, komSecs);
-    const deltaStr = d === null ? '—'
-      : d <= 0 ? '👑 Jij hebt de KOM!'
-      : `+${d}s achter KOM`;
-
-    const marker = L.marker([s.startLat, s.startLng], {icon})
-      .addTo(map)
-      .bindPopup(`
-        <div class="popup-name">${s.name}</div>
-        <div class="popup-score">
-          Windvoordeel: <b>${s.windScore}/100</b><br>
-          Wind: ${s.windLabel}<br>
-          PR: <b>${formatTime(s.prTime)}</b> · KOM: <b>${s.komTime || '—'}</b><br>
-          <span style="color:${d !== null && d <= 0 ? '#f5a623' : '#e74c3c'}">${deltaStr}</span>
-        </div>
-        <a class="popup-strava" href="https://www.strava.com/segments/${s.id}" target="_blank">
-          Open in Strava ↗
-        </a>
-      `);
-    markers.push(marker);
   });
 
-  // Zoom naar ingestelde straal
-  const R = RADIUS_KM / 111;
-  map.fitBounds([
-    [userLat - R, userLng - R * 1.4],
-    [userLat + R, userLng + R * 1.4]
-  ]);
-
-  // Update cirkel
-  if (window._radiusCircle) {
-    window._radiusCircle.setRadius(RADIUS_KM * 1000);
-  }
-
-  // Update teller
-  const el = document.getElementById('nearbyCount');
-  if (el) el.textContent = `${nearby.length} segment${nearby.length !== 1 ? 'en' : ''} in straal`;
+  // Sorteren op windvoordeel
+  segments.sort((a,b) => (b.windScore||0) - (a.windScore||0));
+  renderSegments(currentFilter);
+  updateMapMarkers();
+  showToast('✅ Winddata geladen', `Scores bijgewerkt per segment`);
 }
 
-// Google Encoded Polyline decoder
-function decodePolyline(encoded) {
-  const points = [];
-  let index = 0, lat = 0, lng = 0;
-  while (index < encoded.length) {
-    let shift = 0, result = 0, b;
-    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
-    lat += (result & 1) ? ~(result >> 1) : result >> 1;
-    shift = 0; result = 0;
-    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
-    lng += (result & 1) ? ~(result >> 1) : result >> 1;
-    points.push([lat / 1e5, lng / 1e5]);
-  }
-  return points;
-}
-
-
-// ── RENDER CARDS ──
-function renderSegments(filter) {
-  const grid = document.getElementById('segmentsGrid');
-  let list = segments;
-  if (filter === 'ideal') list = segments.filter(s => s.status === 'ideal');
-  else if (filter === 'good') list = segments.filter(s => s.status === 'good');
-  else if (filter === 'fav') list = segments.filter(s => favs.has(s.id));
-
-  document.getElementById('segBadge').textContent = list.length;
-
-  if (list.length === 0) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px 20px;color:var(--muted)">
-      <div style="font-size:48px;margin-bottom:12px">🚴</div>
-      <p style="font-size:15px">Geen segmenten gevonden.<br>Markeer segmenten als ster op Strava om ze hier te zien.</p>
-    </div>`;
-    return;
-  }
-
-  const komSecs = s => parseKomTime(s.komTime);
-  const delta = s => timeDelta(s.prTime, komSecs(s));
-
-  grid.innerHTML = list.map((s, i) => {
-    const d = delta(s);
-    const hasKom = d !== null && d <= 0 && Math.abs(d) === 0;
-    const isKom  = d !== null && d <= 0;
-    const dStr = d === null
-      ? '<span style="color:var(--muted)">Geen KOM data</span>'
-      : d === 0
-        ? '<span style="color:var(--accent);font-size:18px">👑 Jij hebt de KOM!</span>'
-        : d < 0
-          ? '<span style="color:var(--accent);font-size:18px">👑 Jij hebt de KOM!</span>'
-          : `<span style="color:var(--red)">+${d}s achter KOM</span>`;
-
-    return `
-    <a class="segment-card ${s.status}" style="animation-delay:${i*.04}s"
-       href="https://www.strava.com/segments/${s.id}" target="_blank" rel="noopener">
-      <div class="card-top">
-        <div class="card-title-row">
-          <div class="segment-rank">#${i+1}</div>
-          <div>
-            <div class="segment-name">${s.name}</div>
-            <div class="segment-type">${s.type === 'Ride' ? 'Fietssegment' : s.type || 'Segment'}</div>
-          </div>
-        </div>
-        <span class="status-badge ${s.status==='ideal'?'badge-ideal':s.status==='good'?'badge-good':'badge-none'}">
-          ${s.status==='ideal'?'🔥 Ideaal':s.status==='good'?'👍 Goed':'⚠️ Geen voordeel'}
-        </span>
-      </div>
-
-      <div class="card-stats">
-        <div class="stat-item"><div class="stat-val">${formatDist(s.distance)}</div><div class="stat-label">Afstand</div></div>
-        <div class="stat-item"><div class="stat-val">+${Math.round(s.elevation)}m</div><div class="stat-label">Hoogte</div></div>
-        <div class="stat-item"><div class="stat-val">${s.avgGrade?.toFixed(1)}%</div><div class="stat-label">Stijging</div></div>
-      </div>
-
-      <div class="kom-pr-row">
-        <div class="kom-pr-item">
-          <div class="kp-val" style="color:var(--accent)">${formatTime(s.prTime)}</div>
-          <div class="kp-label">Jouw PR</div>
-        </div>
-        <div class="kom-pr-divider"></div>
-        <div class="kom-pr-delta">
-          <div class="delta-val" style="font-size:13px">${dStr}</div>
-          <div class="delta-label">verschil</div>
-        </div>
-        <div class="kom-pr-divider"></div>
-        <div class="kom-pr-item">
-          <div class="kp-val" style="color:var(--muted)">${s.komTime || '—'}</div>
-          <div class="kp-label">KOM</div>
-        </div>
-      </div>
-
-      <div class="wind-score-row">
-        <span class="wind-score-label">Windvoordeel-score</span>
-        <span class="wind-score-val" style="color:${s.windScore>=68?'var(--green)':s.windScore>=38?'var(--yellow)':'var(--red)'}">${s.windScore}/100</span>
-      </div>
-      <div class="score-bar-bg">
-        <div class="score-bar-fill ${s.status==='ideal'?'fill-ideal':s.status==='good'?'fill-good':'fill-none'}" style="width:${s.windScore}%"></div>
-      </div>
-
-      <div class="card-bottom">
-        <div class="wind-direction-chip">
-          <div class="wind-dir-icon">💨</div> ${s.windLabel}
-        </div>
-        <div class="card-actions">
-          <span class="strava-link">
-            <svg viewBox="0 0 24 24"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-            Opent in Strava ↗
-          </span>
-          <button class="fav-btn ${favs.has(s.id)?'active':''}" onclick="toggleFav(event,${s.id})">⭐</button>
-        </div>
-      </div>
-    </a>`;
-  }).join('');
-}
-
-function filterSegs(btn, filter) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderSegments(filter);
-}
-
-function toggleFav(e, id) {
-  e.stopPropagation();
-  const btn = e.target;
-  if (favs.has(id)) { favs.delete(id); btn.classList.remove('active'); }
-  else              { favs.add(id);    btn.classList.add('active'); }
-  localStorage.setItem('windkom_favs', JSON.stringify([...favs]));
-}
-
-// ── STRAVA SEGMENTEN ──
-async function loadSegments(token) {
-  try {
-    const r = await fetch('/api/segments', { headers: { Authorization: `Bearer ${token}` } });
-    if (!r.ok) throw new Error();
-    segments = await r.json();
-    recalcAll(liveWindDeg, liveWindSpeed);
-    renderSegments(currentFilter);
-    updateMapMarkers();
-    const ideal = segments.filter(s => s.status === 'ideal').length;
-    if (ideal > 0) setTimeout(() =>
-      showToast(`🔥 ${ideal} ideale segmenten nu!`, `Gesorteerd op windvoordeel — bekijk #1`), 1000);
-  } catch {
-    document.getElementById('segmentsGrid').innerHTML =
-      `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)">
-        <div style="font-size:40px;margin-bottom:12px">⚠️</div>
-        <p>Kon segmenten niet laden. Controleer of je Strava-segmenten hebt gemarkeerd als favoriet (ster).</p>
-      </div>`;
-  }
-}
-
-// ── WIND DATA ──
-async function loadWind(lat, lng) {
+// Algemene wind voor banner (op gebruikerslocatie)
+async function loadBannerWind(lat, lng) {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}`
       + `&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m`
@@ -642,17 +501,13 @@ async function loadWind(lat, lng) {
     const res = await fetch(url);
     const data = await res.json();
     const cur = data.current;
+    const dir = degToDir(cur.wind_direction_10m);
 
-    liveWindSpeed = Math.round(cur.wind_speed_10m);
-    liveWindDeg   = Math.round(cur.wind_direction_10m);
-    const gusts   = Math.round(cur.wind_gusts_10m);
-    const dir     = degToDir(liveWindDeg);
-
-    document.getElementById('windSpeed').textContent = liveWindSpeed;
+    document.getElementById('windSpeed').textContent = Math.round(cur.wind_speed_10m);
     document.getElementById('windDirLabel').textContent = dir.label;
     document.getElementById('windDirFull').textContent = dir.full;
-    document.getElementById('compassArrow').style.transform = `rotate(${liveWindDeg}deg)`;
-    document.getElementById('gustLabel').textContent = `💨 Windstoten tot ${gusts} km/u`;
+    document.getElementById('compassArrow').style.transform = `rotate(${cur.wind_direction_10m}deg)`;
+    document.getElementById('gustLabel').textContent = `💨 Windstoten tot ${Math.round(cur.wind_gusts_10m)} km/u`;
 
     // Forecast pills
     const dayNames = ['Vandaag','Morgen','Overmorgen'];
@@ -668,10 +523,8 @@ async function loadWind(lat, lng) {
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${lbl}</div>
       </div>`;
     }).join('');
-
-    if (segments.length) { recalcAll(liveWindDeg, liveWindSpeed); renderSegments(currentFilter); updateMapMarkers(); }
   } catch(e) {
-    console.warn('Wind API fout:', e);
+    console.warn('Banner wind fout:', e);
   }
 }
 
@@ -685,59 +538,361 @@ function selectForecastDay(pill) {
   document.getElementById('windDirLabel').textContent = dir.label;
   document.getElementById('windDirFull').textContent = dir.full;
   document.getElementById('compassArrow').style.transform = `rotate(${d}deg)`;
-  recalcAll(d, s);
-  renderSegments(currentFilter);
-  updateMapMarkers();
-  showToast('📅 Voorspelling bijgewerkt', `Wind: ${s} km/u uit het ${dir.full.toLowerCase()}`);
+  showToast('📅 Voorspelling geselecteerd', `Wind: ${s} km/u uit het ${dir.full.toLowerCase()} — segmentscores blijven op live data`);
 }
 
-// ── LOCATIE ──
-// ── LOCATIE — altijd opvragen bij heropenen ──
-function initLocation() {
-  if (!navigator.geolocation) {
-    initMap(50.75, 3.60);
-    loadWind(50.75, 3.60);
-    document.getElementById('locationTitle').textContent = '📍 Ronse (geen GPS)';
+// ─────────────────────────────────────────
+// KAART
+// ─────────────────────────────────────────
+function initMap(lat, lng) {
+  if (!map) {
+    map = L.map('map', {zoomControl:true, attributionControl:true}).setView([lat,lng],13);
+    const layers = {
+      'Licht':     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19}),
+      'Fietskaart':L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',{maxZoom:19}),
+      'Satelliet': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18}),
+      'Donker':    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}),
+    };
+    layers['Licht'].addTo(map);
+    L.control.layers(layers,{},{position:'topright',collapsed:false}).addTo(map);
+  } else {
+    map.setView([lat,lng],13);
+  }
+
+  if (window._userMarker) window._userMarker.remove();
+  if (window._radiusCircle) window._radiusCircle.remove();
+
+  window._radiusCircle = L.circle([lat,lng],{
+    radius: RADIUS_KM*1000,
+    color:'#f5a623',fillColor:'#f5a623',fillOpacity:.04,weight:1.5,dashArray:'6 6',opacity:.4
+  }).addTo(map);
+
+  const uIcon = L.divIcon({
+    html:`<div style="width:14px;height:14px;background:#f5a623;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #f5a62399"></div>`,
+    className:'',iconSize:[14,14],iconAnchor:[7,7]
+  });
+  window._userMarker = L.marker([lat,lng],{icon:uIcon}).addTo(map)
+    .bindTooltip(`📍 ${userLocationName}`,{permanent:false,direction:'top'});
+
+  fitMapToRadius();
+}
+
+function fitMapToRadius() {
+  const R = RADIUS_KM / 111;
+  map.fitBounds([[userLat-R, userLng-R*1.4],[userLat+R, userLng+R*1.4]]);
+}
+
+function updateMapMarkers() {
+  markers.forEach(m => m.remove());
+  markers = [];
+
+  const nearby = segments.filter(s =>
+    s.startLat && haversine(userLat, userLng, s.startLat, s.startLng) <= RADIUS_KM
+  );
+  document.getElementById('nearbyCount').textContent = `${nearby.length} segment${nearby.length!==1?'en':''} in straal`;
+
+  nearby.forEach(s => {
+    const isSel = s.id === selectedSegId;
+    const color = isSel ? '#ffffff'
+      : s.status==='ideal' ? '#2ecc71'
+      : s.status==='good'  ? '#f39c12'
+      : '#e74c3c';
+    const weight = isSel ? 7 : 4;
+    const opacity = isSel ? 1 : 0.75;
+
+    // Polyline
+    if (s.polyline) {
+      const decoded = decodePolyline(s.polyline);
+      const line = L.polyline(decoded, {color, weight, opacity, lineCap:'round', lineJoin:'round'})
+        .addTo(map);
+      line.on('click', () => selectSegment(s.id));
+      markers.push(line);
+
+      // Richting-pijl op middelpunt
+      if (decoded.length > 1) {
+        const mid = Math.floor(decoded.length/2);
+        const p1 = decoded[mid-1], p2 = decoded[mid];
+        const ang = Math.atan2(p2[1]-p1[1], p2[0]-p1[0]) * 180/Math.PI;
+        const arrIcon = L.divIcon({
+          html:`<div style="transform:rotate(${ang}deg);font-size:${isSel?'20':'14'}px;color:${color};text-shadow:0 0 4px rgba(0,0,0,.5)">➤</div>`,
+          className:'',iconSize:[20,20],iconAnchor:[10,10]
+        });
+        const arr = L.marker(decoded[mid],{icon:arrIcon,interactive:false}).addTo(map);
+        markers.push(arr);
+      }
+    } else if (s.endLat) {
+      const line = L.polyline([[s.startLat,s.startLng],[s.endLat,s.endLng]],
+        {color,weight,opacity,dashArray:'8 5'}).addTo(map);
+      line.on('click', () => selectSegment(s.id));
+      markers.push(line);
+    }
+
+    // Start-pin
+    const startIcon = L.divIcon({
+      html:`<div style="width:${isSel?16:12}px;height:${isSel?16:12}px;background:${color};border:${isSel?'3px solid #000':'2px solid white'};border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>`,
+      className:'',iconSize:[isSel?16:12,isSel?16:12],iconAnchor:[isSel?8:6,isSel?8:6]
+    });
+
+    // Finish-vlag
+    if (s.endLat) {
+      const finIcon = L.divIcon({
+        html:`<div style="font-size:${isSel?'18':'13'}px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">🏁</div>`,
+        className:'',iconSize:[18,18],iconAnchor:[4,16]
+      });
+      const fin = L.marker([s.endLat,s.endLng],{icon:finIcon,interactive:false}).addTo(map);
+      markers.push(fin);
+    }
+
+    const komSecs = parseKomTime(s.komTime);
+    const delta = s.prTime && komSecs ? s.prTime - komSecs : null;
+    const deltaStr = delta===null?'—': delta<=0?'👑 KOM':`+${formatTime(delta)} achter KOM`;
+    const windStr = s.segWindSpeed ? `${s.segWindSpeed} km/u · ${s.windLabel}` : s.windLabel || '—';
+
+    const marker = L.marker([s.startLat,s.startLng],{icon:startIcon})
+      .addTo(map)
+      .bindPopup(`
+        <div class="popup-name">${s.name}</div>
+        <div class="popup-row">🌬️ Wind: <b>${windStr}</b></div>
+        <div class="popup-row">⚡ Score: <b>${s.windScore||'—'}/100</b></div>
+        <div class="popup-row">🏁 PR: <b>${formatTime(s.prTime)}</b> · KOM: <b>${s.komTime||'—'}</b></div>
+        <div class="popup-row" style="color:${delta!==null&&delta<=0?'#f5a623':'#e74c3c'}">${deltaStr}</div>
+        <a class="popup-strava" href="https://www.strava.com/segments/${s.id}" target="_blank">Open in Strava ↗</a>
+      `);
+    marker.on('click', () => selectSegment(s.id));
+    markers.push(marker);
+  });
+}
+
+function selectSegment(id) {
+  selectedSegId = selectedSegId === id ? null : id;
+  updateMapMarkers();
+  // Scroll kaart naar segment
+  const s = segments.find(x => x.id === id);
+  if (s && s.startLat && map) {
+    map.setView([s.startLat, s.startLng], 14, {animate:true});
+  }
+}
+
+function changeRadius(km) {
+  RADIUS_KM = parseInt(km);
+  if (window._radiusCircle) window._radiusCircle.setRadius(RADIUS_KM*1000);
+  fitMapToRadius();
+  updateMapMarkers();
+}
+
+// ─────────────────────────────────────────
+// RENDER CARDS
+// ─────────────────────────────────────────
+function renderSegments(filter) {
+  const grid = document.getElementById('segmentsGrid');
+  let list = segments.filter(s => s.windScore !== undefined); // alleen gescoorde segmenten
+  if (filter==='ideal') list = list.filter(s => s.status==='ideal');
+  else if (filter==='good') list = list.filter(s => s.status==='good');
+  else if (filter==='fav') list = list.filter(s => favs.has(s.id));
+
+  document.getElementById('segBadge').textContent = list.length;
+
+  if (list.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)">
+      <div style="font-size:48px;margin-bottom:12px">🚴</div>
+      <p>Geen segmenten gevonden. Markeer segmenten als ster op Strava.</p>
+    </div>`;
     return;
   }
-  // watchPosition = live updates als gebruiker beweegt
+
+  grid.innerHTML = list.map((s,i) => {
+    const komSecs = parseKomTime(s.komTime);
+    const deltaSecs = s.prTime && komSecs ? s.prTime - komSecs : null;
+    const deltaFmt = formatDelta(deltaSecs);
+    const isKom = deltaFmt === '👑';
+
+    const deltaDisplay = deltaFmt === null
+      ? `<span style="color:var(--muted)">—</span>`
+      : isKom
+        ? `<span style="font-size:20px">👑</span>`
+        : `<span style="color:var(--red)">${deltaFmt}</span>`;
+
+    const windInfo = s.segWindSpeed
+      ? `${s.segWindSpeed} km/u · ${s.windLabel}`
+      : s.windLabel || '—';
+
+    return `
+    <a class="segment-card ${s.status}" style="animation-delay:${i*.04}s"
+       href="https://www.strava.com/segments/${s.id}" target="_blank" rel="noopener"
+       onclick="selectSegment(${s.id})">
+      <div class="card-top">
+        <div class="card-title-row">
+          <div class="segment-rank">#${i+1}</div>
+          <div>
+            <div class="segment-name">${s.name}</div>
+            <div class="segment-type">${s.type==='Ride'?'Fietssegment':s.type||'Segment'}</div>
+            <span class="wind-chip-small">💨 ${windInfo}</span>
+          </div>
+        </div>
+        <span class="status-badge ${s.status==='ideal'?'badge-ideal':s.status==='good'?'badge-good':'badge-none'}">
+          ${s.status==='ideal'?'🔥 Ideaal':s.status==='good'?'👍 Goed':'⚠️ Geen voordeel'}
+        </span>
+      </div>
+
+      <div class="card-stats">
+        <div class="stat-item"><div class="stat-val">${formatDist(s.distance)}</div><div class="stat-label">Afstand</div></div>
+        <div class="stat-item"><div class="stat-val">+${Math.round(s.elevation||0)}m</div><div class="stat-label">Hoogte</div></div>
+        <div class="stat-item"><div class="stat-val">${(s.avgGrade||0).toFixed(1)}%</div><div class="stat-label">Stijging</div></div>
+      </div>
+
+      <div class="kom-pr-row">
+        <div class="kom-pr-item">
+          <div class="kp-val" style="color:var(--accent)">${formatTime(s.prTime)}</div>
+          <div class="kp-label">Jouw PR</div>
+        </div>
+        <div class="kom-pr-divider"></div>
+        <div class="kom-pr-delta">
+          <div class="delta-val">${deltaDisplay}</div>
+          <div class="delta-label">verschil</div>
+        </div>
+        <div class="kom-pr-divider"></div>
+        <div class="kom-pr-item">
+          <div class="kp-val" style="color:var(--muted)">${s.komTime||'—'}</div>
+          <div class="kp-label">KOM</div>
+        </div>
+      </div>
+
+      <div class="wind-score-row">
+        <span class="wind-score-label">Windvoordeel-score</span>
+        <span class="wind-score-val" style="color:${s.windScore>=68?'var(--green)':s.windScore>=38?'var(--yellow)':'var(--red)'}">${s.windScore}/100</span>
+      </div>
+      <div class="score-bar-bg">
+        <div class="score-bar-fill ${s.status==='ideal'?'fill-ideal':s.status==='good'?'fill-good':'fill-none'}" style="width:${s.windScore}%"></div>
+      </div>
+
+      <div class="card-bottom">
+        <div style="font-size:12px;color:var(--muted)">Klik om te openen in Strava ↗</div>
+        <button class="fav-btn ${favs.has(s.id)?'active':''}" onclick="toggleFav(event,${s.id})">⭐</button>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+function filterSegs(btn, filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSegments(filter);
+}
+
+function toggleFav(e, id) {
+  e.preventDefault(); e.stopPropagation();
+  const btn = e.target;
+  if (favs.has(id)) { favs.delete(id); btn.classList.remove('active'); }
+  else              { favs.add(id);    btn.classList.add('active'); }
+  localStorage.setItem('windkom_favs', JSON.stringify([...favs]));
+}
+
+// ─────────────────────────────────────────
+// STRAVA SEGMENTEN
+// ─────────────────────────────────────────
+async function loadSegments(token) {
+  try {
+    const r = await fetch('/api/segments', {headers:{Authorization:`Bearer ${token}`}});
+    if (!r.ok) throw new Error();
+    segments = await r.json();
+    // Initieel sorteren op afstand tot gebruiker
+    segments.sort((a,b) => haversine(userLat,userLng,a.startLat||0,a.startLng||0) - haversine(userLat,userLng,b.startLat||0,b.startLng||0));
+    // Kaart updaten (zonder scores nog)
+    updateMapMarkers();
+    // Wind per segment ophalen
+    await loadWindPerSegment();
+  } catch(e) {
+    document.getElementById('segmentsGrid').innerHTML =
+      `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)">
+        <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+        <p>Kon segmenten niet laden.<br>Markeer segmenten als ster (⭐) op Strava.</p>
+      </div>`;
+  }
+}
+
+// ─────────────────────────────────────────
+// LOCATIE MODAL
+// ─────────────────────────────────────────
+function openLocationModal() {
+  document.getElementById('locationModal').style.display = 'flex';
+  document.getElementById('locInput').focus();
+}
+
+function closeLocationModal() {
+  document.getElementById('locationModal').style.display = 'none';
+}
+
+async function searchLocation() {
+  const q = document.getElementById('locInput').value.trim();
+  if (!q) return;
+  const errEl = document.getElementById('locError');
+  const listEl = document.getElementById('locResults');
+  errEl.style.display = 'none';
+  listEl.innerHTML = '<li style="padding:8px;color:var(--muted)">Zoeken…</li>';
+
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`);
+    const data = await r.json();
+    if (data.length === 0) { errEl.style.display='block'; listEl.innerHTML=''; return; }
+    listEl.innerHTML = data.map(d => {
+      const name = d.display_name.split(',').slice(0,3).join(', ');
+      return `<li class="loc-result-item" onclick="applyLocation(${d.lat},${d.lon},'${d.display_name.split(',')[0].replace(/'/g,"\\'")}')">
+        <div class="loc-name">📍 ${d.display_name.split(',')[0]}</div>
+        <div class="loc-sub">${d.display_name.split(',').slice(1,3).join(',').trim()}</div>
+      </li>`;
+    }).join('');
+  } catch(e) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Zoekopdracht mislukt. Controleer je internetverbinding.';
+    listEl.innerHTML = '';
+  }
+}
+
+function useGPS() {
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      userLat = lat; userLng = lng;
-      initMap(lat, lng);
-      loadWind(lat, lng);
-      // Reverse geocode via nominatim
-      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
-        .then(r => r.json())
-        .then(d => {
-          const city = d.address?.city || d.address?.town || d.address?.village || 'Jouw locatie';
-          document.getElementById('locationTitle').textContent = `📍 ${city}`;
-        })
-        .catch(() => { document.getElementById('locationTitle').textContent = '📍 Jouw locatie'; });
-    },
-    () => {
-      initMap(50.75, 3.60);
-      loadWind(50.75, 3.60);
-      document.getElementById('locationTitle').textContent = '📍 Ronse (standaard)';
-    },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 } // maximumAge:0 = altijd verse locatie
+    pos => { applyLocation(pos.coords.latitude, pos.coords.longitude, 'GPS-locatie'); },
+    () => { document.getElementById('locError').style.display='block'; document.getElementById('locError').textContent='GPS niet beschikbaar.'; },
+    {enableHighAccuracy:true, timeout:8000, maximumAge:0}
   );
 }
 
-// ── AUTH ──
+async function applyLocation(lat, lng, name) {
+  userLat = parseFloat(lat);
+  userLng = parseFloat(lng);
+  userLocationName = name;
+  document.getElementById('locationTitle').textContent = `📍 ${name}`;
+  document.getElementById('locationShort').textContent = name.length>20 ? name.slice(0,20)+'…' : name;
+  closeLocationModal();
+  initMap(userLat, userLng);
+  loadBannerWind(userLat, userLng);
+  // Herlaad segmentscores voor nieuwe locatie
+  const token = sessionStorage.getItem('wk_token');
+  if (token && segments.length > 0) {
+    await loadWindPerSegment();
+  }
+}
+
+// Enter-toets in zoekveld
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('locInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchLocation();
+  });
+});
+
+// ─────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────
 function checkAuth() {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get('athlete');
   if (raw) {
     try {
-      const athlete = JSON.parse(decodeURIComponent(raw));
-      sessionStorage.setItem('wk_token', athlete.token);
-      sessionStorage.setItem('wk_athlete', JSON.stringify({
-        firstname: athlete.firstname, lastname: athlete.lastname, profile: athlete.profile
-      }));
-      window.history.replaceState({}, '', '/');
-    } catch(e) {}
+      const a = JSON.parse(decodeURIComponent(raw));
+      sessionStorage.setItem('wk_token', a.token);
+      sessionStorage.setItem('wk_athlete', JSON.stringify({firstname:a.firstname,lastname:a.lastname,profile:a.profile}));
+      window.history.replaceState({},'','/');
+    } catch(e){}
   }
   const token = sessionStorage.getItem('wk_token');
   const stored = sessionStorage.getItem('wk_athlete');
@@ -746,39 +901,79 @@ function checkAuth() {
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('userPill').style.display = 'flex';
     document.getElementById('headerLoginBtn').style.display = 'none';
-    document.getElementById('userAvatar').src = a.profile || '';
-    document.getElementById('userName').textContent = `${a.firstname} ${a.lastname?.[0] || ''}.`;
-    showToast(`👋 Welkom, ${a.firstname}!`, 'Segmenten worden geladen…');
-    loadSegments(token);
+    document.getElementById('userAvatar').src = a.profile||'';
+    document.getElementById('userName').textContent = `${a.firstname} ${a.lastname?.[0]||''}.`;
+    // Locatie modal tonen bij elke sessie
+    openLocationModal();
+    loadSegmentsWhenReady(token);
   }
-  if (params.get('error')) showToast('⚠️ Login mislukt', 'Probeer opnieuw');
+  if (params.get('error')) showToast('⚠️ Login mislukt','Probeer opnieuw');
 }
 
-// ── TOAST ──
+let pendingToken = null;
+function loadSegmentsWhenReady(token) {
+  pendingToken = token;
+  // Wachten tot locatie gekozen is — loadSegments wordt aangeroepen vanuit applyLocation
+  // Als gebruiker modal sluit zonder keuze, gebruik fallback
+}
+
+// Override applyLocation om ook segmenten te laden
+const _origApply = applyLocation;
+// We herdefiniëren hieronder na DOMContentLoaded
+
+// ─────────────────────────────────────────
+// TOAST & KLOK & DATUM
+// ─────────────────────────────────────────
 function showToast(title, body) {
   const t = document.getElementById('toast');
   document.getElementById('toastTitle').textContent = title;
   document.getElementById('toastBody').textContent = body;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-// ── KLOK & DATUM ──
 function updateClock() {
   document.getElementById('liveClock').textContent =
     new Date().toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
 }
-const DAYS2   = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
-const MONTHS2 = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
-const now = new Date();
+const DAYS2=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const MONTHS2=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+const _now = new Date();
 document.getElementById('currentDate').textContent =
-  `${DAYS2[now.getDay()]} ${now.getDate()} ${MONTHS2[now.getMonth()]} ${now.getFullYear()}`;
-
+  `${DAYS2[_now.getDay()]} ${_now.getDate()} ${MONTHS2[_now.getMonth()]} ${_now.getFullYear()}`;
 updateClock();
 setInterval(updateClock, 10000);
-initLocation();
-setInterval(initLocation, 600000);
-checkAuth();
+
+// ─────────────────────────────────────────
+// START — wacht op DOMContentLoaded
+// ─────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Herdefinieer applyLocation zodat het ook segmenten laadt
+  window.applyLocation = async function(lat, lng, name) {
+    userLat = parseFloat(lat);
+    userLng = parseFloat(lng);
+    userLocationName = name;
+    document.getElementById('locationTitle').textContent = `📍 ${name}`;
+    document.getElementById('locationShort').textContent = name.length>20 ? name.slice(0,20)+'…' : name;
+    closeLocationModal();
+    initMap(userLat, userLng);
+    loadBannerWind(userLat, userLng);
+    if (pendingToken) {
+      const t = pendingToken;
+      pendingToken = null;
+      await loadSegments(t);
+    } else if (segments.length > 0) {
+      await loadWindPerSegment();
+    }
+  };
+
+  document.getElementById('locInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchLocation();
+  });
+
+  checkAuth();
+});
 </script>
 </body>
 </html>
