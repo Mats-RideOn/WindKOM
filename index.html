@@ -405,9 +405,10 @@ function segmentBearing(sLat, sLng, eLat, eLng) {
 // ─────────────────────────────────────────
 function parseKomTime(str) {
   if (!str) return null;
-  // Strava geeft bv "4:32", "4:32 /km", "1:04:32", "2:15/mi"
-  // Pak het eerste patroon dat eruitziet als een tijd (cijfers met dubbele punten)
+  // Log voor debugging — verwijder later
+  console.log('parseKomTime input:', JSON.stringify(str));
   const match = str.match(/(\d{1,2}:\d{2}(:\d{2})?)/);
+  console.log('parseKomTime match:', match ? match[1] : 'geen match');
   if (!match) return null;
   const parts = match[1].split(':').map(Number);
   if (parts.some(isNaN)) return null;
@@ -813,25 +814,28 @@ function renderSegments(filter) {
     const prDisplay  = prSecs  ? formatTime(prSecs)  : '—';
     const komDisplay = komSecs ? formatTime(komSecs)  : (s.komTime || '—');
 
-    // Delta sectie: enkel kroontje als KOM, anders tijdsverschil, anders uitleg
+    // Als parseKomTime faalt maar er staat wel een leesbare tijd in komTime,
+    // probeer dan komDisplay zelf te parsen als fallback
+    const komSecsResolved = komSecs ?? parseKomTime(komDisplay);
+
     let deltaVal, deltaLabel;
-    if (prSecs && komSecs) {
-      const diff = prSecs - komSecs;
+    if (prSecs && komSecsResolved) {
+      const diff = prSecs - komSecsResolved;
       if (diff <= 0) {
         deltaVal   = `<span style="font-size:26px;line-height:1">👑</span>`;
-        deltaLabel = ''; // geen label onder kroontje
+        deltaLabel = '';
       } else {
         const dm = Math.floor(diff / 60);
         const ds = diff % 60;
         deltaVal   = `<span style="color:var(--red);font-size:16px">+${String(dm).padStart(2,'0')}:${String(ds).padStart(2,'0')}</span>`;
         deltaLabel = 'achter KOM';
       }
-    } else if (!prSecs && !komSecs) {
+    } else if (!prSecs && !komSecsResolved) {
       deltaVal = `<span style="color:var(--muted)">—</span>`; deltaLabel = 'verschil';
     } else if (!prSecs) {
       deltaVal = `<span style="color:var(--muted);font-size:12px">Geen PR</span>`; deltaLabel = '';
     } else {
-      deltaVal = `<span style="color:var(--muted);font-size:12px">KOM onbekend</span>`; deltaLabel = '';
+      deltaVal = `<span style="color:var(--muted);font-size:12px">—</span>`; deltaLabel = '';
     }
 
     // Hoogte: gebruik elevHigh - elevLow als beschikbaar, anders total_elevation_gain
