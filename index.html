@@ -311,7 +311,7 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
         <div class="wind-dir-arrow" id="windDirArrow">→</div>
         <div class="wind-dir-name" id="windDirLabel">—</div>
         <div class="wind-dir-full" id="windDirFull">Laden…</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">wind komt uit het</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">↑ wind waait naar</div>
       </div>
     </div>
 
@@ -508,10 +508,16 @@ function decodePolyline(encoded) {
 }
 
 // ─────────────────────────────────────────
-// Pijl die richting aangeeft vanwaar wind blaast (wind van N blaast naar Z = pijl ↓)
+// windDegToArrow: wind VAN richting deg
+// Noord (0°/360°) = wind komt van boven = waait naar beneden = ↓
+// Oost  (90°)     = wind komt van rechts = waait naar links  = ←
+// Zuid  (180°)    = wind komt van onder  = waait naar boven  = ↑
+// West  (270°)    = wind komt van links  = waait naar rechts = →
 function windDegToArrow(deg) {
+  // arrows[0] = Noord (0°), elke stap 45°
   const arrows = ['↓','↙','←','↖','↑','↗','→','↘'];
-  return arrows[Math.round(((deg + 22.5) % 360) / 45) % 8];
+  const idx = Math.round(((deg % 360) + 360 + 22.5) / 45) % 8;
+  return arrows[idx];
 }
 
 // WIND PER SEGMENT OPHALEN (Open-Meteo)
@@ -586,9 +592,9 @@ async function loadBannerWind(lat, lng) {
     document.getElementById('windDirLabel').textContent = dir.label;
     document.getElementById('windDirFull').textContent = dir.full;
     document.getElementById('windDirArrow').textContent = windDegToArrow(deg);
-    document.getElementById('windDirArrow').style.transform = `rotate(${deg}deg)`;
+    // Kompas: oranje punt = vanwaar wind komt (0° = Noord = pijl omhoog)
     document.getElementById('compassArrowGroup').setAttribute('transform', `rotate(${deg} 55 55)`);
-    document.getElementById('compassDirLabel').textContent = `${spd} km/u uit ${dir.label}`;
+    document.getElementById('compassDirLabel').textContent = `uit het ${dir.full.toLowerCase()}`;
     document.getElementById('gustLabel').textContent = `💨 Windstoten tot ${Math.round(cur.wind_gusts_10m)} km/u`;
 
     // Forecast pills
@@ -620,7 +626,6 @@ function selectForecastDay(pill) {
   document.getElementById('windDirLabel').textContent = dir.label;
   document.getElementById('windDirFull').textContent = dir.full;
   document.getElementById('windDirArrow').textContent = windDegToArrow(d);
-  document.getElementById('windDirArrow').style.transform = `rotate(${d}deg)`;
   document.getElementById('compassArrowGroup').setAttribute('transform', `rotate(${d} 55 55)`);
   document.getElementById('compassDirLabel').textContent = `${s} km/u uit ${dir.label}`;
   showToast('📅 Voorspelling geselecteerd', `Wind: ${s} km/u uit het ${dir.full.toLowerCase()} — segmentscores blijven op live data`);
@@ -706,7 +711,7 @@ function updateMapMarkers() {
 
     // Zoom naar segment bounds als geselecteerd
     if (isSel && segBounds) {
-      map.fitBounds(segBounds, {padding:[60,60], animate:true, maxZoom:16});
+      setTimeout(() => map.fitBounds(segBounds, {padding:[60,60], animate:true, maxZoom:16}), 400);
     }
 
     // Start-pin
@@ -748,7 +753,11 @@ function updateMapMarkers() {
 function selectSegment(id) {
   selectedSegId = selectedSegId === id ? null : id;
   updateMapMarkers();
-  // Zoom zit nu in updateMapMarkers via segBounds.fitBounds
+  if (selectedSegId !== null) {
+    // Scroll naar kaart
+    document.getElementById('map').closest('.map-section')
+      .scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
 }
 
 function changeRadius(km) {
@@ -891,10 +900,12 @@ function renderSegments(filter) {
       deltaVal = `<span style="color:var(--muted);font-size:12px">—</span>`; deltaLabel = '';
     }
 
-    // Hoogte: gebruik elevHigh - elevLow als beschikbaar, anders total_elevation_gain
-    const elevDisplay = (s.elevHigh != null && s.elevLow != null)
-      ? `${Math.round(s.elevHigh - s.elevLow)}m`
-      : (s.elevation != null ? `+${Math.round(s.elevation)}m` : '—');
+    // Hoogteverschil start→finish: elevHigh - elevLow geeft het netto verschil
+    // total_elevation_gain telt ALLE stijging (ook bij afdalingen tussenin) — dat is te hoog
+    const elevRaw = (s.elevHigh != null && s.elevLow != null)
+      ? Math.round(s.elevHigh - s.elevLow)
+      : (s.elevation != null ? Math.round(s.elevation) : null);
+    const elevDisplay = elevRaw != null ? `+${elevRaw}m` : '—';
 
     const windInfo = s.segWindSpeed
       ? `${s.segWindSpeed} km/u · ${s.windLabel}`
