@@ -705,24 +705,36 @@ function renderSegments(filter) {
 
   grid.innerHTML = list.map((s,i) => {
     const komSecs = parseKomTime(s.komTime);
-    const prSecs = s.prTime ? parseInt(s.prTime) : null;
-    const deltaSecs = (prSecs && komSecs) ? prSecs - komSecs : null;
+    const prSecs  = (s.prTime != null) ? parseInt(s.prTime) : null;
+
+    // Vier gevallen:
+    // 1. Geen PR én geen KOM → beide tonen als —
+    // 2. Geen PR, wel KOM → KOM tonen, verschil = "Geen PR"
+    // 3. Wel PR, geen KOM → PR tonen, verschil = "Geen KOM"
+    // 4. Beide → verschil berekenen, kroontje of +mm:ss
+
+    const prDisplay  = prSecs  ? formatTime(prSecs)  : '—';
+    const komDisplay = komSecs ? formatTime(komSecs)  : (s.komTime || '—');
 
     let deltaDisplay;
-    if (!prSecs) {
+    if (!prSecs && !komSecs) {
+      deltaDisplay = `<span style="color:var(--muted)">—</span>`;
+    } else if (!prSecs) {
       deltaDisplay = `<span style="color:var(--muted)">Geen PR</span>`;
     } else if (!komSecs) {
-      // komTime is er maar kan niet geparsed worden — toon raw voor debugging
-      deltaDisplay = `<span style="color:var(--muted)" title="raw: ${s.komTime||'leeg'}">Geen KOM data</span>`;
-    } else if (deltaSecs <= 0) {
-      deltaDisplay = `<span style="font-size:22px" title="Jij hebt de KOM!">👑</span>`;
+      deltaDisplay = `<span style="color:var(--muted)">Geen KOM</span>`;
     } else {
-      const dm = Math.floor(deltaSecs / 60);
-      const ds = deltaSecs % 60;
-      deltaDisplay = `<span style="color:var(--red)">+${String(dm).padStart(2,'0')}:${String(ds).padStart(2,'0')}</span>`;
+      const diff = prSecs - komSecs;
+      if (diff <= 0) {
+        deltaDisplay = `<span style="font-size:22px" title="Jij hebt de KOM!">👑</span>`;
+      } else {
+        const dm = Math.floor(diff / 60);
+        const ds = diff % 60;
+        deltaDisplay = `<span style="color:var(--red)">+${String(dm).padStart(2,'0')}:${String(ds).padStart(2,'0')}</span>`;
+      }
     }
 
-    // Hoogte: gebruik elevation_high - elevation_low als beschikbaar, anders total_elevation_gain
+    // Hoogte: gebruik elevHigh - elevLow als beschikbaar, anders total_elevation_gain
     const elevDisplay = (s.elevHigh != null && s.elevLow != null)
       ? `${Math.round(s.elevHigh - s.elevLow)}m`
       : (s.elevation != null ? `+${Math.round(s.elevation)}m` : '—');
@@ -732,9 +744,8 @@ function renderSegments(filter) {
       : s.windLabel || '—';
 
     return `
-    <a class="segment-card ${s.status}" style="animation-delay:${i*.04}s"
-       href="https://www.strava.com/segments/${s.id}" target="_blank" rel="noopener"
-       onclick="selectSegment(${s.id})">
+    <div class="segment-card ${s.status}" style="animation-delay:${i*.04}s"
+         onclick="selectSegment(${s.id})">
       <div class="card-top">
         <div class="card-title-row">
           <div class="segment-rank">#${i+1}</div>
@@ -757,7 +768,7 @@ function renderSegments(filter) {
 
       <div class="kom-pr-row">
         <div class="kom-pr-item">
-          <div class="kp-val" style="color:var(--accent)">${formatTime(s.prTime)}</div>
+          <div class="kp-val" style="color:var(--accent)">${prDisplay}</div>
           <div class="kp-label">Jouw PR</div>
         </div>
         <div class="kom-pr-divider"></div>
@@ -767,7 +778,7 @@ function renderSegments(filter) {
         </div>
         <div class="kom-pr-divider"></div>
         <div class="kom-pr-item">
-          <div class="kp-val" style="color:var(--muted)">${s.komTime||'—'}</div>
+          <div class="kp-val" style="color:var(--muted)">${komDisplay}</div>
           <div class="kp-label">KOM</div>
         </div>
       </div>
@@ -781,10 +792,14 @@ function renderSegments(filter) {
       </div>
 
       <div class="card-bottom">
-        <div style="font-size:12px;color:var(--muted)">Klik om te openen in Strava ↗</div>
+        <a class="strava-link" href="https://www.strava.com/segments/${s.id}" target="_blank" rel="noopener"
+           onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+          Open in Strava ↗
+        </a>
         <button class="fav-btn ${favs.has(s.id)?'active':''}" onclick="toggleFav(event,${s.id})">⭐</button>
       </div>
-    </a>`;
+    </div>`;
   }).join('');
 }
 
@@ -796,7 +811,7 @@ function filterSegs(btn, filter) {
 }
 
 function toggleFav(e, id) {
-  e.preventDefault(); e.stopPropagation();
+  e.stopPropagation();
   const btn = e.target;
   if (favs.has(id)) { favs.delete(id); btn.classList.remove('active'); }
   else              { favs.add(id);    btn.classList.add('active'); }
