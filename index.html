@@ -118,12 +118,13 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .distance-filter{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 24px;margin-bottom:20px}
 .dist-filter-inner{display:flex;flex-direction:column;gap:10px}
 .dist-labels{display:flex;justify-content:space-between;align-items:center}
-.slider-track-wrap{position:relative;height:36px;display:flex;align-items:center}
-.slider-track{position:absolute;left:0;right:0;height:5px;background:var(--border);border-radius:3px;pointer-events:none}
-.slider-track-wrap input[type=range]{position:absolute;width:100%;height:5px;appearance:none;-webkit-appearance:none;background:transparent;pointer-events:all;cursor:pointer}
-.slider-track-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border:3px solid var(--bg);border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)}
-.slider-track-wrap input[type=range]::-moz-range-thumb{width:18px;height:18px;background:var(--accent);border:3px solid var(--bg);border-radius:50%;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4)}
-.slider-fill{position:absolute;height:5px;background:var(--accent);border-radius:3px;pointer-events:none}
+.slider-track-wrap{position:relative;height:36px;display:flex;align-items:center;padding:0 9px}
+.slider-track{position:absolute;left:9px;right:9px;height:5px;background:var(--border);border-radius:3px;pointer-events:none;z-index:0}
+.slider-fill{position:absolute;height:5px;background:var(--accent);border-radius:3px;pointer-events:none;z-index:1}
+.slider-track-wrap input[type=range]{position:absolute;left:0;right:0;width:100%;height:5px;appearance:none;-webkit-appearance:none;background:transparent;pointer-events:none;z-index:2}
+.slider-track-wrap input[type=range].active-thumb{z-index:3}
+.slider-track-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--accent);border:3px solid var(--bg);border-radius:50%;cursor:pointer;pointer-events:all;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.slider-track-wrap input[type=range]::-moz-range-thumb{width:20px;height:20px;background:var(--accent);border:3px solid var(--bg);border-radius:50%;cursor:pointer;pointer-events:all;box-shadow:0 2px 6px rgba(0,0,0,.5)}
 .wind-loading{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 .wind-loading-dot{width:5px;height:5px;background:var(--accent);border-radius:50%;animation:blink 1s infinite}
 .wind-loading-dot:nth-child(2){animation-delay:.2s}
@@ -701,10 +702,9 @@ function changeRadius(km) {
   updateMapMarkers();
 }
 
-let distMin = 0, distMax = 50; // km
+let distMin = 0, distMax = 50;
 
 function initDistanceSlider() {
-  // Bepaal max op basis van langste segment
   const maxDist = segments.length
     ? Math.ceil(Math.max(...segments.map(s => (s.distance||0)/1000)) + 1)
     : 50;
@@ -712,41 +712,72 @@ function initDistanceSlider() {
 
   const sMin = document.getElementById('sliderMin');
   const sMax = document.getElementById('sliderMax');
-  sMin.max = cap; sMax.max = cap;
-  sMax.value = cap;
+  sMin.min = 0; sMin.max = cap; sMin.value = 0; sMin.step = 0.5;
+  sMax.min = 0; sMax.max = cap; sMax.value = cap; sMax.step = 0.5;
   distMin = 0; distMax = cap;
+
+  // z-index fix: welke thumb bovenop ligt hangt af van positie
+  function fixZIndex() {
+    const lo = parseFloat(sMin.value), hi = parseFloat(sMax.value), cap2 = parseFloat(sMax.max);
+    // Als min bijna aan het einde zit, geef min hogere z-index zodat hij bereikbaar blijft
+    if (hi - lo < 1 || lo > cap2 * 0.95) {
+      sMin.classList.add('active-thumb');
+      sMax.classList.remove('active-thumb');
+    } else {
+      sMax.classList.add('active-thumb');
+      sMin.classList.remove('active-thumb');
+    }
+  }
+
+  sMin.addEventListener('input', () => { fixZIndex(); updateDistSlider(); });
+  sMax.addEventListener('input', () => { fixZIndex(); updateDistSlider(); });
+
   updateDistSlider();
+  fixZIndex();
   document.getElementById('distanceFilter').style.display = 'block';
 }
 
 function updateDistSlider() {
   const sMin = document.getElementById('sliderMin');
   const sMax = document.getElementById('sliderMax');
-  let lo = parseFloat(sMin.value), hi = parseFloat(sMax.value);
-  const cap = parseFloat(sMax.max);
+  if (!sMin || !sMax) return;
 
-  // Voorkom kruisen
-  if (lo > hi - 0.5) {
-    if (document.activeElement === sMin) { lo = hi - 0.5; sMin.value = lo; }
-    else { hi = lo + 0.5; sMax.value = hi; }
+  const cap = parseFloat(sMax.max) || 50;
+  let lo = parseFloat(sMin.value);
+  let hi = parseFloat(sMax.value);
+
+  // Voorkom kruisen — geef voorrang aan het actieve element
+  if (lo >= hi) {
+    if (document.activeElement === sMin) {
+      hi = Math.min(lo + 0.5, cap);
+      sMax.value = hi;
+    } else {
+      lo = Math.max(hi - 0.5, 0);
+      sMin.value = lo;
+    }
   }
-  distMin = lo; distMax = hi;
 
-  // Vul het gekleurde stuk in
+  distMin = lo;
+  distMax = hi;
+
+  // Teken oranje fill tussen de twee thumbs
   const pLo = (lo / cap) * 100;
   const pHi = (hi / cap) * 100;
-  const track = document.getElementById('sliderTrack');
-  // Verwijder oude fill
-  track.parentElement.querySelectorAll('.slider-fill').forEach(e => e.remove());
+  const wrap = sMin.parentElement;
+  wrap.querySelectorAll('.slider-fill').forEach(e => e.remove());
   const fill = document.createElement('div');
   fill.className = 'slider-fill';
-  fill.style.left = pLo + '%';
+  fill.style.left  = `calc(${pLo}% + ${(1 - pLo/50) * 9}px)`;
+  fill.style.width = `calc(${pHi - pLo}% - ${(pHi - pLo) / 50 * 0}px)`;
+  // Simpelere aanpak zonder padding correctie:
+  fill.style.left  = pLo + '%';
   fill.style.width = (pHi - pLo) + '%';
-  track.insertAdjacentElement('afterend', fill);
+  wrap.querySelector('.slider-track').insertAdjacentElement('afterend', fill);
 
-  const loStr = lo < 1 ? `${Math.round(lo*1000)} m` : `${lo.toFixed(lo < 10 ? 1 : 0)} km`;
-  const hiStr = hi >= cap ? `${hi.toFixed(0)}+ km` : (hi < 1 ? `${Math.round(hi*1000)} m` : `${hi.toFixed(hi < 10 ? 1 : 0)} km`);
-  document.getElementById('distRangeLabel').textContent = `${loStr} – ${hiStr}`;
+  // Label
+  const fmt = v => v < 1 ? `${Math.round(v*1000)}m` : `${v < 10 ? v.toFixed(1) : Math.round(v)}km`;
+  const hiLabel = hi >= cap ? `${Math.round(cap)}km+` : fmt(hi);
+  document.getElementById('distRangeLabel').textContent = `${fmt(lo)} – ${hiLabel}`;
 
   renderSegments(currentFilter);
 }
@@ -780,26 +811,27 @@ function renderSegments(filter) {
     const prSecs  = (s.prTime != null) ? parseInt(s.prTime) : null;
 
     const prDisplay  = prSecs  ? formatTime(prSecs)  : '—';
-    // komDisplay: als komSecs geparsed → netjes geformatteerd, anders toon raw string (bv "4:32 /km")
-    const komDisplay = komSecs ? formatTime(komSecs) : (s.komTime || '—');
+    const komDisplay = komSecs ? formatTime(komSecs)  : (s.komTime || '—');
 
-    let deltaDisplay;
-    if (!prSecs && !s.komTime) {
-      deltaDisplay = `<span style="color:var(--muted)">—</span>`;
-    } else if (!prSecs) {
-      deltaDisplay = `<span style="color:var(--muted)">Geen PR</span>`;
-    } else if (!komSecs) {
-      // prTime bestaat maar KOM kan niet vergeleken worden
-      deltaDisplay = `<span style="color:var(--muted)">KOM onbekend</span>`;
-    } else {
+    // Delta sectie: enkel kroontje als KOM, anders tijdsverschil, anders uitleg
+    let deltaVal, deltaLabel;
+    if (prSecs && komSecs) {
       const diff = prSecs - komSecs;
       if (diff <= 0) {
-        deltaDisplay = `<span style="font-size:22px" title="Jij hebt de KOM!">👑</span>`;
+        deltaVal   = `<span style="font-size:26px;line-height:1">👑</span>`;
+        deltaLabel = ''; // geen label onder kroontje
       } else {
         const dm = Math.floor(diff / 60);
         const ds = diff % 60;
-        deltaDisplay = `<span style="color:var(--red)">+${String(dm).padStart(2,'0')}:${String(ds).padStart(2,'0')}</span>`;
+        deltaVal   = `<span style="color:var(--red);font-size:16px">+${String(dm).padStart(2,'0')}:${String(ds).padStart(2,'0')}</span>`;
+        deltaLabel = 'achter KOM';
       }
+    } else if (!prSecs && !komSecs) {
+      deltaVal = `<span style="color:var(--muted)">—</span>`; deltaLabel = 'verschil';
+    } else if (!prSecs) {
+      deltaVal = `<span style="color:var(--muted);font-size:12px">Geen PR</span>`; deltaLabel = '';
+    } else {
+      deltaVal = `<span style="color:var(--muted);font-size:12px">KOM onbekend</span>`; deltaLabel = '';
     }
 
     // Hoogte: gebruik elevHigh - elevLow als beschikbaar, anders total_elevation_gain
@@ -841,8 +873,8 @@ function renderSegments(filter) {
         </div>
         <div class="kom-pr-divider"></div>
         <div class="kom-pr-delta">
-          <div class="delta-val">${deltaDisplay}</div>
-          <div class="delta-label">verschil</div>
+          <div class="delta-val">${deltaVal}</div>
+          ${deltaLabel ? `<div class="delta-label">${deltaLabel}</div>` : ''}
         </div>
         <div class="kom-pr-divider"></div>
         <div class="kom-pr-item">
