@@ -105,16 +105,18 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
 .map-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:32px}
 .map-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 #map{height:440px;z-index:1}
-/* Leaflet dark override */
-.leaflet-tile{filter:brightness(.7) invert(1) contrast(1.2) hue-rotate(200deg) saturate(.4) brightness(.7)}
-.leaflet-container{background:#0a0c0f}
-.leaflet-popup-content-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.leaflet-popup-tip{background:var(--surface)}
+/* Leaflet popup stijl */
+.leaflet-container{background:#f0f0f0}
+.leaflet-popup-content-wrapper{background:white;border:1px solid #e0e0e0;border-radius:10px;color:#1a1a1a;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.leaflet-popup-tip{background:white}
 .leaflet-popup-content{margin:12px 16px;font-family:'Barlow',sans-serif}
-.popup-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px}
-.popup-score{font-size:13px;color:var(--muted)}
-.popup-score b{color:var(--accent)}
+.leaflet-control-layers{background:white;border:1px solid #ddd;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px}
+.popup-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px;color:#111}
+.popup-score{font-size:13px;color:#555}
+.popup-score b{color:#111}
 .popup-strava{display:inline-flex;align-items:center;gap:5px;margin-top:8px;background:var(--strava);color:white;padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;text-decoration:none;font-family:'Barlow Condensed',sans-serif}
+.radius-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-family:'Barlow',sans-serif;font-size:13px;cursor:pointer}
+.radius-select:focus{outline:none;border-color:var(--accent)}
 /* SKELETON */
 .skel{background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -214,7 +216,16 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
   <div class="map-section">
     <div class="map-header">
       <div class="section-title">🗺️ Kaartweergave</div>
-      <span style="font-size:13px;color:var(--muted)">Klik op een segment voor details</span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <label style="font-size:13px;color:var(--muted)">Straal:</label>
+        <select class="radius-select" id="radiusSelect" onchange="changeRadius(this.value)">
+          <option value="5">5 km</option>
+          <option value="10" selected>10 km</option>
+          <option value="20">20 km</option>
+          <option value="50">50 km</option>
+        </select>
+        <span style="font-size:13px;color:var(--muted)" id="nearbyCount">— segmenten in straal</span>
+      </div>
     </div>
     <div id="map"></div>
   </div>
@@ -254,8 +265,17 @@ function haversine(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-let userLat = 50.75, userLng = 3.60;
-const RADIUS_KM = 10;
+function changeRadius(km) {
+  // Gebruik const RADIUS_KM niet meer, maak het dynamisch
+  window.RADIUS_KM_DYNAMIC = parseInt(km);
+  updateMapMarkers();
+}
+
+// Overschrijf RADIUS_KM dynamisch
+Object.defineProperty(window, 'RADIUS_KM', {
+  get: () => window.RADIUS_KM_DYNAMIC || 10,
+  configurable: true
+});
 let segments = [];
 let favs = new Set(JSON.parse(localStorage.getItem('windkom_favs') || '[]'));
 let currentFilter = 'all';
@@ -343,43 +363,58 @@ function recalcAll(windDeg, windSpeedKmh) {
 }
 
 // ── KAART INITIALISEREN ──
+let tileLayers = {};
+let activeLayer = null;
+
 function initMap(lat, lng) {
   userLat = lat; userLng = lng;
-  if (map) {
-    // Update view naar nieuwe locatie
-    map.setView([lat, lng], 12);
-    return;
+
+  if (!map) {
+    map = L.map('map', { zoomControl: true, attributionControl: true }).setView([lat, lng], 13);
+
+    // Kaartlagen
+    tileLayers = {
+      'Licht (CartoDB)': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }),
+      'Fiets (OpenCycle)': L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', { maxZoom: 19 }),
+      'Satelliet': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 }),
+      'Donker': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }),
+    };
+
+    // Standaard: lichte kaart (leesbaarst)
+    tileLayers['Licht (CartoDB)'].addTo(map);
+    activeLayer = tileLayers['Licht (CartoDB)'];
+
+    // Layer control
+    L.control.layers(tileLayers, {}, { position: 'topright', collapsed: false }).addTo(map);
+  } else {
+    map.setView([lat, lng], 13);
   }
-  map = L.map('map', { zoomControl: true, attributionControl: false }).setView([lat, lng], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-  }).addTo(map);
 
-  // Toon 10km cirkel rondom gebruiker
-  L.circle([lat, lng], {
+  // Verwijder oude locatiemarkering
+  if (window._userMarker) window._userMarker.remove();
+
+  // 10km cirkel
+  if (window._radiusCircle) window._radiusCircle.remove();
+  window._radiusCircle = L.circle([lat, lng], {
     radius: RADIUS_KM * 1000,
-    color: '#f5a623',
-    fillColor: '#f5a623',
-    fillOpacity: 0.03,
-    weight: 1,
-    dashArray: '6 6',
-    opacity: 0.3,
+    color: '#f5a623', fillColor: '#f5a623',
+    fillOpacity: 0.04, weight: 1.5, dashArray: '6 6', opacity: 0.4,
   }).addTo(map);
 
-  // Gebruikerslocation marker
+  // Gebruikerslocation
   const userIcon = L.divIcon({
-    html: `<div style="width:12px;height:12px;background:#f5a623;border:2px solid #0a0c0f;border-radius:50%;box-shadow:0 0 8px #f5a62388"></div>`,
-    className: '', iconSize: [12,12], iconAnchor: [6,6]
+    html: `<div style="width:14px;height:14px;background:#f5a623;border:3px solid white;border-radius:50%;box-shadow:0 0 10px #f5a62399"></div>`,
+    className: '', iconSize: [14,14], iconAnchor: [7,7]
   });
-  L.marker([lat, lng], {icon: userIcon}).addTo(map)
-    .bindTooltip('Jouw locatie', {permanent: false, direction: 'top'});
+  window._userMarker = L.marker([lat, lng], {icon: userIcon})
+    .addTo(map).bindTooltip('📍 Jouw locatie', {permanent: false, direction: 'top'});
 }
 
 function updateMapMarkers() {
   markers.forEach(m => m.remove());
   markers = [];
 
-  // Alleen segmenten binnen 10km tonen op kaart
+  // Alleen segmenten binnen 10km
   const nearby = segments.filter(s =>
     s.startLat && haversine(userLat, userLng, s.startLat, s.startLng) <= RADIUS_KM
   );
@@ -387,23 +422,32 @@ function updateMapMarkers() {
   nearby.forEach(s => {
     const color = s.status === 'ideal' ? '#2ecc71' : s.status === 'good' ? '#f39c12' : '#e74c3c';
 
-    // Lijn van start naar einde
-    if (s.endLat) {
+    // Teken echte polyline als die beschikbaar is, anders rechte lijn
+    if (s.polyline && s.polyline.length > 0) {
+      const decoded = decodePolyline(s.polyline);
+      const line = L.polyline(decoded, {
+        color, weight: 5, opacity: 0.85,
+        lineCap: 'round', lineJoin: 'round'
+      }).addTo(map);
+      markers.push(line);
+    } else if (s.endLat) {
       const line = L.polyline([[s.startLat, s.startLng],[s.endLat, s.endLng]], {
-        color, weight: 4, opacity: 0.8
+        color, weight: 5, opacity: 0.7, dashArray: '8 6'
       }).addTo(map);
       markers.push(line);
     }
 
-    // Marker op startpunt
+    // Start-pin
     const icon = L.divIcon({
-      html: `<div style="width:14px;height:14px;background:${color};border:2.5px solid #0a0c0f;border-radius:50%;box-shadow:0 0 6px ${color}66"></div>`,
-      className: '', iconSize: [14,14], iconAnchor: [7,7]
+      html: `<div style="width:13px;height:13px;background:${color};border:2.5px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.4)"></div>`,
+      className: '', iconSize: [13,13], iconAnchor: [6,6]
     });
 
     const komSecs = parseKomTime(s.komTime);
-    const delta = timeDelta(s.prTime, komSecs);
-    const deltaStr = delta !== null ? (delta > 0 ? `+${delta}s achter KOM` : `${Math.abs(delta)}s voor KOM`) : '—';
+    const d = timeDelta(s.prTime, komSecs);
+    const deltaStr = d === null ? '—'
+      : d <= 0 ? '👑 Jij hebt de KOM!'
+      : `+${d}s achter KOM`;
 
     const marker = L.marker([s.startLat, s.startLng], {icon})
       .addTo(map)
@@ -412,24 +456,49 @@ function updateMapMarkers() {
         <div class="popup-score">
           Windvoordeel: <b>${s.windScore}/100</b><br>
           Wind: ${s.windLabel}<br>
-          Jouw PR: <b>${formatTime(s.prTime)}</b> · KOM: <b>${s.komTime || '—'}</b><br>
-          <span style="color:${delta > 0 ? '#e74c3c':'#2ecc71'}">${deltaStr}</span>
+          PR: <b>${formatTime(s.prTime)}</b> · KOM: <b>${s.komTime || '—'}</b><br>
+          <span style="color:${d !== null && d <= 0 ? '#f5a623' : '#e74c3c'}">${deltaStr}</span>
         </div>
         <a class="popup-strava" href="https://www.strava.com/segments/${s.id}" target="_blank">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
-          Open in Strava
+          Open in Strava ↗
         </a>
       `);
     markers.push(marker);
   });
 
-  // Zoom naar 10km bounds rondom gebruiker (niet naar segmenten)
-  const R = RADIUS_KM / 111; // graden
+  // Zoom naar ingestelde straal
+  const R = RADIUS_KM / 111;
   map.fitBounds([
     [userLat - R, userLng - R * 1.4],
     [userLat + R, userLng + R * 1.4]
   ]);
+
+  // Update cirkel
+  if (window._radiusCircle) {
+    window._radiusCircle.setRadius(RADIUS_KM * 1000);
+  }
+
+  // Update teller
+  const el = document.getElementById('nearbyCount');
+  if (el) el.textContent = `${nearby.length} segment${nearby.length !== 1 ? 'en' : ''} in straal`;
 }
+
+// Google Encoded Polyline decoder
+function decodePolyline(encoded) {
+  const points = [];
+  let index = 0, lat = 0, lng = 0;
+  while (index < encoded.length) {
+    let shift = 0, result = 0, b;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lat += (result & 1) ? ~(result >> 1) : result >> 1;
+    shift = 0; result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lng += (result & 1) ? ~(result >> 1) : result >> 1;
+    points.push([lat / 1e5, lng / 1e5]);
+  }
+  return points;
+}
+
 
 // ── RENDER CARDS ──
 function renderSegments(filter) {
@@ -454,11 +523,15 @@ function renderSegments(filter) {
 
   grid.innerHTML = list.map((s, i) => {
     const d = delta(s);
-    const dStr = d !== null
-      ? d > 0
-        ? `<span style="color:var(--red)">+${d}s achter KOM</span>`
-        : `<span style="color:var(--green)">${Math.abs(d)}s voor KOM 🏆</span>`
-      : '<span style="color:var(--muted)">Geen KOM data</span>';
+    const hasKom = d !== null && d <= 0 && Math.abs(d) === 0;
+    const isKom  = d !== null && d <= 0;
+    const dStr = d === null
+      ? '<span style="color:var(--muted)">Geen KOM data</span>'
+      : d === 0
+        ? '<span style="color:var(--accent);font-size:18px">👑 Jij hebt de KOM!</span>'
+        : d < 0
+          ? '<span style="color:var(--accent);font-size:18px">👑 Jij hebt de KOM!</span>'
+          : `<span style="color:var(--red)">+${d}s achter KOM</span>`;
 
     return `
     <a class="segment-card ${s.status}" style="animation-delay:${i*.04}s"
@@ -619,20 +692,36 @@ function selectForecastDay(pill) {
 }
 
 // ── LOCATIE ──
+// ── LOCATIE — altijd opvragen bij heropenen ──
 function initLocation() {
+  if (!navigator.geolocation) {
+    initMap(50.75, 3.60);
+    loadWind(50.75, 3.60);
+    document.getElementById('locationTitle').textContent = '📍 Ronse (geen GPS)';
+    return;
+  }
+  // watchPosition = live updates als gebruiker beweegt
   navigator.geolocation.getCurrentPosition(
     pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
       userLat = lat; userLng = lng;
       initMap(lat, lng);
       loadWind(lat, lng);
-      document.getElementById('locationTitle').textContent = '📍 Jouw locatie';
+      // Reverse geocode via nominatim
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+        .then(r => r.json())
+        .then(d => {
+          const city = d.address?.city || d.address?.town || d.address?.village || 'Jouw locatie';
+          document.getElementById('locationTitle').textContent = `📍 ${city}`;
+        })
+        .catch(() => { document.getElementById('locationTitle').textContent = '📍 Jouw locatie'; });
     },
     () => {
       initMap(50.75, 3.60);
       loadWind(50.75, 3.60);
       document.getElementById('locationTitle').textContent = '📍 Ronse (standaard)';
-    }
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 } // maximumAge:0 = altijd verse locatie
   );
 }
 
