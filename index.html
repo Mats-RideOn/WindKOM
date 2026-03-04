@@ -379,11 +379,21 @@ function segmentBearing(sLat, sLng, eLat, eLng) {
 // KOM / PR
 // ─────────────────────────────────────────
 function parseKomTime(str) {
+  // Strava geeft KOM als "4:32" of "4:32 /km" of "1:04:32" — strip alles behalve cijfers en dubbele punten
   if (!str) return null;
-  const clean = str.replace(/[^0-9:]/g,'');
+  const clean = str.replace(/[^0-9:]/g, '').trim();
+  if (!clean || !clean.includes(':')) return null;
   const parts = clean.split(':');
-  if (parts.length === 2) return parseInt(parts[0])*60 + parseInt(parts[1]);
-  if (parts.length === 3) return parseInt(parts[0])*3600 + parseInt(parts[1])*60 + parseInt(parts[2]);
+  if (parts.length === 2) {
+    const m = parseInt(parts[0]), s = parseInt(parts[1]);
+    if (isNaN(m) || isNaN(s)) return null;
+    return m * 60 + s;
+  }
+  if (parts.length === 3) {
+    const h = parseInt(parts[0]), m = parseInt(parts[1]), s = parseInt(parts[2]);
+    if (isNaN(h) || isNaN(m) || isNaN(s)) return null;
+    return h * 3600 + m * 60 + s;
+  }
   return null;
 }
 
@@ -593,12 +603,15 @@ function updateMapMarkers() {
 
   nearby.forEach(s => {
     const isSel = s.id === selectedSegId;
-    const color = isSel ? '#ffffff'
+    // Diepblauw voor geselecteerd — zichtbaar op licht, donker én satelliet, nooit verward met windkleuren
+    const color = isSel ? '#0057ff'
       : s.status==='ideal' ? '#2ecc71'
       : s.status==='good'  ? '#f39c12'
       : '#e74c3c';
     const weight = isSel ? 7 : 4;
     const opacity = isSel ? 1 : 0.75;
+
+    let segBounds = null;
 
     // Polyline
     if (s.polyline) {
@@ -607,36 +620,30 @@ function updateMapMarkers() {
         .addTo(map);
       line.on('click', () => selectSegment(s.id));
       markers.push(line);
-
-      // Richting-pijl op middelpunt
-      if (decoded.length > 1) {
-        const mid = Math.floor(decoded.length/2);
-        const p1 = decoded[mid-1], p2 = decoded[mid];
-        const ang = Math.atan2(p2[1]-p1[1], p2[0]-p1[0]) * 180/Math.PI;
-        const arrIcon = L.divIcon({
-          html:`<div style="transform:rotate(${ang}deg);font-size:${isSel?'20':'14'}px;color:${color};text-shadow:0 0 4px rgba(0,0,0,.5)">➤</div>`,
-          className:'',iconSize:[20,20],iconAnchor:[10,10]
-        });
-        const arr = L.marker(decoded[mid],{icon:arrIcon,interactive:false}).addTo(map);
-        markers.push(arr);
-      }
+      if (isSel) segBounds = line.getBounds();
     } else if (s.endLat) {
       const line = L.polyline([[s.startLat,s.startLng],[s.endLat,s.endLng]],
         {color,weight,opacity,dashArray:'8 5'}).addTo(map);
       line.on('click', () => selectSegment(s.id));
       markers.push(line);
+      if (isSel) segBounds = line.getBounds();
+    }
+
+    // Zoom naar segment bounds als geselecteerd
+    if (isSel && segBounds) {
+      map.fitBounds(segBounds, {padding:[60,60], animate:true, maxZoom:16});
     }
 
     // Start-pin
     const startIcon = L.divIcon({
-      html:`<div style="width:${isSel?16:12}px;height:${isSel?16:12}px;background:${color};border:${isSel?'3px solid #000':'2px solid white'};border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>`,
+      html:`<div style="width:${isSel?16:12}px;height:${isSel?16:12}px;background:${color};border:${isSel?'3px solid #fff':'2px solid white'};border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.5)"></div>`,
       className:'',iconSize:[isSel?16:12,isSel?16:12],iconAnchor:[isSel?8:6,isSel?8:6]
     });
 
-    // Finish-vlag
+    // Finish-vlag (enkel bij geselecteerd of als voldoende ingezoomd)
     if (s.endLat) {
       const finIcon = L.divIcon({
-        html:`<div style="font-size:${isSel?'18':'13'}px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">🏁</div>`,
+        html:`<div style="font-size:${isSel?'18':'12'}px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))">🏁</div>`,
         className:'',iconSize:[18,18],iconAnchor:[4,16]
       });
       const fin = L.marker([s.endLat,s.endLng],{icon:finIcon,interactive:false}).addTo(map);
@@ -666,11 +673,7 @@ function updateMapMarkers() {
 function selectSegment(id) {
   selectedSegId = selectedSegId === id ? null : id;
   updateMapMarkers();
-  // Scroll kaart naar segment
-  const s = segments.find(x => x.id === id);
-  if (s && s.startLat && map) {
-    map.setView([s.startLat, s.startLng], 14, {animate:true});
-  }
+  // Zoom zit nu in updateMapMarkers via segBounds.fitBounds
 }
 
 function changeRadius(km) {
@@ -702,15 +705,27 @@ function renderSegments(filter) {
 
   grid.innerHTML = list.map((s,i) => {
     const komSecs = parseKomTime(s.komTime);
-    const deltaSecs = s.prTime && komSecs ? s.prTime - komSecs : null;
-    const deltaFmt = formatDelta(deltaSecs);
-    const isKom = deltaFmt === '👑';
+    const prSecs = s.prTime ? parseInt(s.prTime) : null;
+    const deltaSecs = (prSecs && komSecs) ? prSecs - komSecs : null;
 
-    const deltaDisplay = deltaFmt === null
-      ? `<span style="color:var(--muted)">—</span>`
-      : isKom
-        ? `<span style="font-size:20px">👑</span>`
-        : `<span style="color:var(--red)">${deltaFmt}</span>`;
+    let deltaDisplay;
+    if (!prSecs) {
+      deltaDisplay = `<span style="color:var(--muted)">Geen PR</span>`;
+    } else if (!komSecs) {
+      // komTime is er maar kan niet geparsed worden — toon raw voor debugging
+      deltaDisplay = `<span style="color:var(--muted)" title="raw: ${s.komTime||'leeg'}">Geen KOM data</span>`;
+    } else if (deltaSecs <= 0) {
+      deltaDisplay = `<span style="font-size:22px" title="Jij hebt de KOM!">👑</span>`;
+    } else {
+      const dm = Math.floor(deltaSecs / 60);
+      const ds = deltaSecs % 60;
+      deltaDisplay = `<span style="color:var(--red)">+${String(dm).padStart(2,'0')}:${String(ds).padStart(2,'0')}</span>`;
+    }
+
+    // Hoogte: gebruik elevation_high - elevation_low als beschikbaar, anders total_elevation_gain
+    const elevDisplay = (s.elevHigh != null && s.elevLow != null)
+      ? `${Math.round(s.elevHigh - s.elevLow)}m`
+      : (s.elevation != null ? `+${Math.round(s.elevation)}m` : '—');
 
     const windInfo = s.segWindSpeed
       ? `${s.segWindSpeed} km/u · ${s.windLabel}`
@@ -736,7 +751,7 @@ function renderSegments(filter) {
 
       <div class="card-stats">
         <div class="stat-item"><div class="stat-val">${formatDist(s.distance)}</div><div class="stat-label">Afstand</div></div>
-        <div class="stat-item"><div class="stat-val">+${Math.round(s.elevation||0)}m</div><div class="stat-label">Hoogte</div></div>
+        <div class="stat-item"><div class="stat-val">${elevDisplay}</div><div class="stat-label">Hoogte</div></div>
         <div class="stat-item"><div class="stat-val">${(s.avgGrade||0).toFixed(1)}%</div><div class="stat-label">Stijging</div></div>
       </div>
 
