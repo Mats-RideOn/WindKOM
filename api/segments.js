@@ -19,25 +19,27 @@ module.exports = async function handler(req, res) {
         name:      s.name,
         distance:  s.distance,
         elevation: s.total_elevation_gain,
+        elevHigh:  d.elevation_high,   // ← hoogtepunt segment
+        elevLow:   d.elevation_low,    // ← laagste punt segment
         avgGrade:  s.average_grade,
         type:      s.activity_type,
         startLat:  s.start_latlng?.[0],
         startLng:  s.start_latlng?.[1],
         endLat:    s.end_latlng?.[0],
         endLng:    s.end_latlng?.[1],
-        prTime:    s.athlete_pr_effort?.elapsed_time,
-        komTime:   d.xoms?.kom,
-        komName:   d.kom_summary?.overall?.athlete_name,
-        polyline:  d.map?.polyline,   // ← echte routelijn
+        prTime:    s.athlete_pr_effort?.elapsed_time ?? null,
+        komTime:   d.xoms?.kom ?? null,
+        komName:   d.kom_summary?.overall?.athlete_name ?? null,
+        polyline:  d.map?.polyline ?? null,
       };
     } catch {
       return {
         id: s.id, name: s.name, distance: s.distance,
-        elevation: s.total_elevation_gain, avgGrade: s.average_grade,
-        type: s.activity_type,
+        elevation: s.total_elevation_gain, elevHigh: null, elevLow: null,
+        avgGrade: s.average_grade, type: s.activity_type,
         startLat: s.start_latlng?.[0], startLng: s.start_latlng?.[1],
         endLat: s.end_latlng?.[0], endLng: s.end_latlng?.[1],
-        prTime: s.athlete_pr_effort?.elapsed_time,
+        prTime: s.athlete_pr_effort?.elapsed_time ?? null,
         komTime: null, komName: null, polyline: null,
       };
     }
