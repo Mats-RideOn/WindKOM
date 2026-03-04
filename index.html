@@ -405,12 +405,14 @@ function segmentBearing(sLat, sLng, eLat, eLng) {
 // ─────────────────────────────────────────
 function parseKomTime(str) {
   if (!str) return null;
-  // Log voor debugging — verwijder later
-  console.log('parseKomTime input:', JSON.stringify(str));
-  const match = str.match(/(\d{1,2}:\d{2}(:\d{2})?)/);
-  console.log('parseKomTime match:', match ? match[1] : 'geen match');
-  if (!match) return null;
-  const parts = match[1].split(':').map(Number);
+  const s = str.trim();
+  // Geval 1: pure seconden zoals "51s", "51 s", "51"
+  const secOnly = s.match(/^(\d+)\s*s?$/);
+  if (secOnly) return parseInt(secOnly[1]);
+  // Geval 2: mm:ss of h:mm:ss zoals "4:32", "1:04:32", "4:32 /km"
+  const timeMatch = s.match(/(\d{1,2}:\d{2}(:\d{2})?)/);
+  if (!timeMatch) return null;
+  const parts = timeMatch[1].split(':').map(Number);
   if (parts.some(isNaN)) return null;
   if (parts.length === 2) return parts[0] * 60 + parts[1];
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
@@ -812,10 +814,8 @@ function renderSegments(filter) {
     const prSecs  = (s.prTime != null) ? parseInt(s.prTime) : null;
 
     const prDisplay  = prSecs  ? formatTime(prSecs)  : '—';
-    const komDisplay = komSecs ? formatTime(komSecs)  : (s.komTime || '—');
-
-    // Als parseKomTime faalt maar er staat wel een leesbare tijd in komTime,
-    // probeer dan komDisplay zelf te parsen als fallback
+    // Formatteer KOM netjes — als komSecs bekend gebruik formatTime, anders raw string
+    const komDisplay = komSecs ? formatTime(komSecs) : (s.komTime || '—');
     const komSecsResolved = komSecs ?? parseKomTime(komDisplay);
 
     let deltaVal, deltaLabel;
