@@ -397,12 +397,8 @@ let forecastMode = 'live'; // 'live' of index in forecast
 // ─────────────────────────────────────────
 // RICHTINGEN
 // ─────────────────────────────────────────
-// Windrichting = vanwaar wind komt (meteorologische conventie)
-// De pijl toont waarheen de wind WAAIT (= tegenovergestelde richting)
-// Noord (0°)  = wind van Noord = waait naar Zuid  = pijl ↓
-// Oost  (90°) = wind van Oost  = waait naar West  = pijl ←
-// Zuid (180°) = wind van Zuid  = waait naar Noord = pijl ↑
-// West (270°) = wind van West  = waait naar Oost  = pijl →
+// Naam/label = vanwaar wind komt (Noord = wind van het noorden)
+// Arrow = waarheen wind waait (Noord → pijl ↓, want wind van N waait naar Z)
 const DIRS = [
   {label:'N', full:'Noord',     arrow:'↓'},
   {label:'NO',full:'Noordoost', arrow:'↙'},
