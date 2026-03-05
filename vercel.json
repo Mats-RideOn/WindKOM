@@ -1,6 +1,8 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/auth",     "destination": "/api/auth.js" },
+    { "source": "/api/callback", "destination": "/api/callback.js" },
+    { "source": "/api/segments", "destination": "/api/segments.js" },
+    { "source": "/api/explore",  "destination": "/api/explore.js" }
   ]
 }
