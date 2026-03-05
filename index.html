@@ -402,10 +402,10 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
   <!-- TAB: EXPLORE -->
   <div class="tab-panel" id="tabExplore">
     <div class="explore-header">
-      <div class="section-title">🔍 Explore — Alle segmenten in jouw straal</div>
+      <div class="section-title">🔍 Explore — Ideale segmenten in jouw straal</div>
       <p class="explore-warning">
-        Zoekt alle publieke Strava-segmenten binnen <b id="exploreRadiusLabel">10 km</b> van jouw locatie.
-        Segmenten die je nog niet gereden hebt hebben geen PR. Laden duurt <b>10–20 seconden</b>.
+        Toont alleen segmenten met een <b>windvoordeel-score van 68+</b> (ideaal) binnen <b id="exploreRadiusLabel">10 km</b>.
+        Laden duurt <b>10–20 seconden</b>.
       </p>
       <div class="explore-stats" id="exploreStats" style="display:none">
         <div class="explore-stat">Gevonden: <b id="exploreCount">—</b></div>
@@ -426,10 +426,9 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
         <span class="badge" id="exploreBadge">—</span>
       </div>
       <div class="filters">
-        <button class="filter-btn active" onclick="filterExplore(this,'all')">Alle</button>
-        <button class="filter-btn" onclick="filterExplore(this,'ideal')">🔥 Ideaal</button>
-        <button class="filter-btn" onclick="filterExplore(this,'good')">👍 Goed</button>
+        <button class="filter-btn active" onclick="filterExplore(this,'all')">Alle ideale</button>
         <button class="filter-btn" onclick="filterExplore(this,'nopr')">🆕 Nog geen PR</button>
+        <button class="filter-btn" onclick="filterExplore(this,'pr')">✅ Al gereden</button>
       </div>
     </div>
     <div class="segments-grid" id="exploreGrid"></div>
@@ -1328,13 +1327,14 @@ async function loadExplore() {
     progLabel.textContent = `Wind: ${Math.min((ci+1)*20, allRaw.length)}/${allRaw.length} klaar…`;
   }
 
+  exploreSegments = exploreSegments.filter(s => s.status === 'ideal');
   exploreSegments.sort((a, b) => b.windScore - a.windScore);
   progFill.style.width = '100%';
-  progLabel.textContent = `✅ Klaar — ${exploreSegments.length} segmenten geladen`;
+  progLabel.textContent = `✅ Klaar — ${exploreSegments.length} ideale segmenten gevonden`;
 
   document.getElementById('exploreStats').style.display = 'flex';
-  document.getElementById('exploreCount').textContent = exploreSegments.length;
-  document.getElementById('exploreWindCount').textContent = exploreSegments.filter(s => s.segWindSpeed > 0).length;
+  document.getElementById('exploreCount').textContent = `${exploreSegments.length} ideaal`;
+  document.getElementById('exploreWindCount').textContent = allRaw.length + ' totaal gescand';
   document.getElementById('exploreTime').textContent = new Date().toLocaleTimeString('nl-BE', {hour:'2-digit', minute:'2-digit'});
   document.getElementById('exploreSegHeader').style.display = 'flex';
 
@@ -1354,16 +1354,15 @@ function filterExplore(btn, filter) {
 function renderExplore(filter) {
   const grid = document.getElementById('exploreGrid');
   let list = [...exploreSegments];
-  if (filter === 'ideal') list = list.filter(s => s.status === 'ideal');
-  else if (filter === 'good') list = list.filter(s => s.status === 'good');
-  else if (filter === 'nopr') list = list.filter(s => !s.prTime);
+  if (filter === 'nopr') list = list.filter(s => !s.prTime);
+  else if (filter === 'pr') list = list.filter(s => s.prTime);
 
   document.getElementById('exploreBadge').textContent = list.length;
 
   if (list.length === 0) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--muted)">
-      <div style="font-size:48px;margin-bottom:12px">🔍</div>
-      <p>Geen segmenten gevonden voor dit filter.</p>
+      <div style="font-size:48px;margin-bottom:12px">${filter==='nopr'?'🆕':'🌬️'}</div>
+      <p>${filter==='nopr' ? 'Alle ideale segmenten in deze straal heb je al gereden.' : 'Geen ideale segmenten gevonden. Probeer een grotere straal of kom later terug als de wind draait.'}</p>
     </div>`;
     return;
   }
