@@ -2,8 +2,21 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WindKOM — Rij met de wind mee</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>WindKOM</title>
+
+<!-- PWA / iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WindKOM">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- iOS icoontjes (zelfde afbeelding, verschillende groottes) -->
+<link rel="apple-touch-icon" href="https://wind-kom.vercel.app/icon.png">
+
+<!-- Splash screen kleur -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -16,6 +29,34 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(245,166,35,.05) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(232,93,4,.03) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+/* iOS safe area */
+header{padding-left:max(40px, env(safe-area-inset-left));padding-right:max(40px, env(safe-area-inset-right));padding-top:max(18px, env(safe-area-inset-top))}
+main{padding-left:max(40px, env(safe-area-inset-left));padding-right:max(40px, env(safe-area-inset-right))}
+
+/* Mobiel */
+@media(max-width:600px){
+  header{padding:max(16px,env(safe-area-inset-top)) 16px 16px}
+  .logo{font-size:22px}
+  .logo small{display:none}
+  .header-right{gap:8px}
+  .live-badge{display:none}
+  main{padding:16px}
+  .wind-banner{flex-direction:column;gap:16px;padding:16px}
+  .wind-stats{gap:16px}
+  .wind-stat .val{font-size:28px}
+  .forecast-pills{gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .forecast-pill{min-width:72px;padding:8px 10px}
+  .segments-grid{grid-template-columns:1fr}
+  #map{height:300px}
+  .main-tabs{gap:0}
+  .main-tab{padding:10px 16px;font-size:15px}
+  .section-header{flex-direction:column;align-items:flex-start;gap:10px}
+  .filters{flex-wrap:wrap;gap:6px}
+  .kom-pr-delta{min-width:80px}
+  .map-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .wind-dir-big{display:none} /* te smal op mobiel, windroos alleen */
+}
 
 /* HEADER */
 header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;border-bottom:1px solid var(--border);background:rgba(10,12,15,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:500}
