@@ -21,9 +21,13 @@ module.exports = async function handler(req, res) {
       });
       const d = await dr.json();
 
-      // KOM tijd: probeer meerdere velden
-      const komTime = d.xoms?.kom ?? d.xoms?.overall ?? null;
-
+      // Probeer meerdere velden in volgorde
+      const komTime = d.xoms?.kom 
+      ?? d.xoms?.overall 
+      ?? d.xoms?.destination 
+      ?? d.kom_summary?.overall?.kom
+      ?? null;
+      
       return {
         id:        s.id,
         name:      s.name,
