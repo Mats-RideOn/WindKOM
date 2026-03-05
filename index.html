@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>WindKOM</title>
 
 <!-- PWA / iOS -->
@@ -649,25 +649,23 @@ async function fetchWindForSegment(lat, lng) {
   };
 }
 
-// Haal wind op voor alle segmenten tegelijk (parallel, max 20)
+// Haal wind op voor alle favoriete segmenten (max 20 tegelijk)
 async function loadWindPerSegment() {
-  const nearby = segments.filter(s =>
-    s.startLat && haversine(userLat, userLng, s.startLat, s.startLng) <= RADIUS_KM
-  ).slice(0, 20); // max 20 om rate limit te vermijden
+  const all = segments.filter(s => s.startLat).slice(0, 20);
 
-  if (nearby.length === 0) return;
+  if (all.length === 0) return;
 
-  showToast('🌬️ Wind ophalen…', `Wind per segment laden voor ${nearby.length} segmenten`);
+  showToast('🌬️ Wind ophalen…', `Wind per segment laden voor ${all.length} segmenten`);
 
   const results = await Promise.allSettled(
-    nearby.map(s => fetchWindForSegment(
-      s.startLat + (s.endLat - s.startLat) / 2, // middelpunt segment
+    all.map(s => fetchWindForSegment(
+      s.startLat + (s.endLat - s.startLat) / 2,
       s.startLng + (s.endLng - s.startLng) / 2
     ))
   );
 
   results.forEach((res, i) => {
-    const s = nearby[i];
+    const s = all[i];
     if (res.status === 'fulfilled') {
       const w = res.value;
       const bearing = segmentBearing(s.startLat, s.startLng, s.endLat, s.endLng);
@@ -967,7 +965,10 @@ function renderSegments(filter) {
   else if (filter==='good') list = list.filter(s => s.status==='good');
   else if (filter==='fav') list = list.filter(s => favs.has(s.id));
 
-  // Afstandsfilter
+  // Straalfilter — alleen segmenten binnen de gekozen straal van huidige locatie
+  list = list.filter(s => s.startLat && haversine(userLat, userLng, s.startLat, s.startLng) <= RADIUS_KM);
+
+  // Segmentlengte filter (slider)
   list = list.filter(s => {
     const km = (s.distance || 0) / 1000;
     const cap = parseFloat(document.getElementById('sliderMax')?.max || 50);
@@ -1508,6 +1509,7 @@ window.addEventListener('DOMContentLoaded', () => {
       await loadSegments(t);
     } else if (segments.length > 0) {
       await loadWindPerSegment();
+      renderSegments(currentFilter); // herrender met nieuwe straal
     }
   };
 
