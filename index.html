@@ -1343,7 +1343,8 @@ function updateExploreSlider() {
   wrap.querySelector('.slider-track').insertAdjacentElement('afterend', fill);
 
   const fmt = v => v < 1 ? `${Math.round(v*1000)}m` : `${v < 10 ? v.toFixed(1) : Math.round(v)}km`;
-  document.getElementById('exploreDistLabel').textContent = `${fmt(lo)} – ${hi >= cap ? Math.round(cap)+'km+' : fmt(hi)}`;
+  const labelEl = document.getElementById('exploreDistLabel');
+  if (labelEl) labelEl.textContent = `${fmt(lo)} – ${hi >= cap ? Math.round(cap)+'km+' : fmt(hi)}`;
 
   if (exploreSegments.length > 0) renderExplore(exploreFilter);
 }
@@ -1588,6 +1589,14 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('locInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') searchLocation();
   });
+
+  // Explore slider alvast klaarzetten met listeners (voor het laden)
+  const expMin = document.getElementById('exploreSliderMin');
+  const expMax = document.getElementById('exploreSliderMax');
+  if (expMin && expMax) {
+    expMin.addEventListener('input', () => updateExploreSlider());
+    expMax.addEventListener('input', () => updateExploreSlider());
+  }
 
   checkAuth();
 });
