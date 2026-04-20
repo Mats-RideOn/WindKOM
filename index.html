@@ -1459,7 +1459,7 @@ async function loadExplore() {
     progLabel.textContent = `Wind: ${Math.min((ci+1)*20, allRaw.length)}/${allRaw.length} klaar…`;
   }
 
-  exploreSegments = exploreSegments.filter(s => s.windScore >= 10);
+  exploreSegments = exploreSegments.filter(s => s.status === 'ideal');
   exploreSegments.sort((a, b) => b.windScore - a.windScore);
   initExploreSlider();
   progFill.style.width = '100%';
@@ -1473,8 +1473,8 @@ async function loadExplore() {
 
   btn.disabled = false;
   btn.textContent = '🔄 Opnieuw laden';
+  exploreFilter = 'all';
   renderExplore('all');
-  document.querySelectorAll('#tabExplore .filter-btn')[0].click();
 }
 
 function filterExplore(btn, filter) {
