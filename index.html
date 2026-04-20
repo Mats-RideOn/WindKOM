@@ -469,6 +469,19 @@ main{max-width:1400px;margin:0 auto;padding:32px 40px;position:relative;z-index:
         Toont alleen segmenten met een <b>windvoordeel-score van 68+</b> (ideaal) binnen <b id="exploreRadiusLabel">10 km</b>.
         Laden duurt <b>10–20 seconden</b>.
       </p>
+
+      <!-- Afstandsfilter voor explore -->
+      <div style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:13px;color:var(--muted);font-weight:500">📏 Segmentlengte</span>
+          <span id="exploreDistLabel" style="font-size:13px;font-weight:600;color:var(--accent)">0 – 50 km</span>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-track"></div>
+          <input type="range" id="exploreSliderMin" min="0" max="50" value="0" step="0.5">
+          <input type="range" id="exploreSliderMax" min="0" max="50" value="50" step="0.5">
+        </div>
+      </div>
       <div class="explore-stats" id="exploreStats" style="display:none">
         <div class="explore-stat">Gevonden: <b id="exploreCount">—</b></div>
         <div class="explore-stat">Met wind berekend: <b id="exploreWindCount">—</b></div>
@@ -1281,8 +1294,59 @@ function switchTab(tab) {
 // ─────────────────────────────────────────
 // EXPLORE LOGICA
 // ─────────────────────────────────────────
-let exploreSegments = [];
-let exploreFilter = 'all';
+let exploreDistMin = 0, exploreDistMax = 50;
+
+function initExploreSlider() {
+  const maxDist = exploreSegments.length
+    ? Math.ceil(Math.max(...exploreSegments.map(s => (s.distance||0)/1000)) + 1)
+    : 50;
+  const cap = Math.max(maxDist, 5);
+
+  const sMin = document.getElementById('exploreSliderMin');
+  const sMax = document.getElementById('exploreSliderMax');
+  sMin.min = 0; sMin.max = cap; sMin.value = 0; sMin.step = 0.5;
+  sMax.min = 0; sMax.max = cap; sMax.value = cap; sMax.step = 0.5;
+  exploreDistMin = 0; exploreDistMax = cap;
+
+  function fixZIndex() {
+    const lo = parseFloat(sMin.value), hi = parseFloat(sMax.value), c = parseFloat(sMax.max);
+    if (hi - lo < 1 || lo > c * 0.95) { sMin.classList.add('active-thumb'); sMax.classList.remove('active-thumb'); }
+    else { sMax.classList.add('active-thumb'); sMin.classList.remove('active-thumb'); }
+  }
+
+  sMin.addEventListener('input', () => { fixZIndex(); updateExploreSlider(); });
+  sMax.addEventListener('input', () => { fixZIndex(); updateExploreSlider(); });
+  updateExploreSlider();
+  fixZIndex();
+}
+
+function updateExploreSlider() {
+  const sMin = document.getElementById('exploreSliderMin');
+  const sMax = document.getElementById('exploreSliderMax');
+  if (!sMin || !sMax) return;
+  const cap = parseFloat(sMax.max) || 50;
+  let lo = parseFloat(sMin.value), hi = parseFloat(sMax.value);
+  if (lo >= hi) {
+    if (document.activeElement === sMin) { hi = Math.min(lo + 0.5, cap); sMax.value = hi; }
+    else { lo = Math.max(hi - 0.5, 0); sMin.value = lo; }
+  }
+  exploreDistMin = lo; exploreDistMax = hi;
+
+  // Teken fill
+  const pLo = (lo/cap)*100, pHi = (hi/cap)*100;
+  const wrap = sMin.parentElement;
+  wrap.querySelectorAll('.slider-fill').forEach(e => e.remove());
+  const fill = document.createElement('div');
+  fill.className = 'slider-fill';
+  fill.style.left = pLo + '%';
+  fill.style.width = (pHi - pLo) + '%';
+  wrap.querySelector('.slider-track').insertAdjacentElement('afterend', fill);
+
+  const fmt = v => v < 1 ? `${Math.round(v*1000)}m` : `${v < 10 ? v.toFixed(1) : Math.round(v)}km`;
+  document.getElementById('exploreDistLabel').textContent = `${fmt(lo)} – ${hi >= cap ? Math.round(cap)+'km+' : fmt(hi)}`;
+
+  if (exploreSegments.length > 0) renderExplore(exploreFilter);
+}
 
 async function loadExplore() {
   const btn = document.getElementById('exploreLoadBtn');
@@ -1392,6 +1456,7 @@ async function loadExplore() {
 
   exploreSegments = exploreSegments.filter(s => s.status === 'ideal');
   exploreSegments.sort((a, b) => b.windScore - a.windScore);
+  initExploreSlider();
   progFill.style.width = '100%';
   progLabel.textContent = `✅ Klaar — ${exploreSegments.length} ideale segmenten gevonden`;
 
@@ -1419,6 +1484,13 @@ function renderExplore(filter) {
   let list = [...exploreSegments];
   if (filter === 'nopr') list = list.filter(s => !s.prTime);
   else if (filter === 'pr') list = list.filter(s => s.prTime);
+
+  // Segmentlengte filter
+  const cap = parseFloat(document.getElementById('exploreSliderMax')?.max || 50);
+  list = list.filter(s => {
+    const km = (s.distance||0)/1000;
+    return km >= exploreDistMin && (exploreDistMax >= cap || km <= exploreDistMax);
+  });
 
   document.getElementById('exploreBadge').textContent = list.length;
 
