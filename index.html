@@ -523,6 +523,7 @@ let segments = [];
 let favs = new Set(JSON.parse(localStorage.getItem('windkom_favs') || '[]'));
 let currentFilter = 'all';
 let userLat = 51.05, userLng = 3.72; // Gent als fallback
+let locationConfirmed = false;
 let userLocationName = 'Laden…';
 let RADIUS_KM = 10;
 let map = null, markers = [];
@@ -978,8 +979,10 @@ function renderSegments(filter) {
   else if (filter==='good') list = list.filter(s => s.status==='good');
   else if (filter==='fav') list = list.filter(s => favs.has(s.id));
 
-  // Straalfilter — alleen segmenten binnen de gekozen straal van huidige locatie
-  list = list.filter(s => s.startLat && haversine(userLat, userLng, s.startLat, s.startLng) <= RADIUS_KM);
+  // Straalfilter — alleen als gebruiker locatie heeft bevestigd
+  if (locationConfirmed) {
+    list = list.filter(s => s.startLat && haversine(userLat, userLng, s.startLat, s.startLng) <= RADIUS_KM);
+  }
 
   // Segmentlengte filter (slider)
   list = list.filter(s => {
@@ -1188,6 +1191,7 @@ function useGPS() {
 async function applyLocation(lat, lng, name) {
   userLat = parseFloat(lat);
   userLng = parseFloat(lng);
+  locationConfirmed = true;
   userLocationName = name;
   document.getElementById('locationTitle').textContent = `📍 ${name}`;
   document.getElementById('locationShort').textContent = name.length>20 ? name.slice(0,20)+'…' : name;
@@ -1570,6 +1574,7 @@ window.addEventListener('DOMContentLoaded', () => {
   window.applyLocation = async function(lat, lng, name) {
     userLat = parseFloat(lat);
     userLng = parseFloat(lng);
+    locationConfirmed = true;
     userLocationName = name;
     document.getElementById('locationTitle').textContent = `📍 ${name}`;
     document.getElementById('locationShort').textContent = name.length>20 ? name.slice(0,20)+'…' : name;
