@@ -1512,11 +1512,10 @@ function renderExplore(filter) {
   else if (filter === 'pr') list = list.filter(s => s.prTime);
 
   // Segmentlengte filter
-  const cap = parseFloat(document.getElementById('exploreSliderMax')?.max || 50);
   list = list.filter(s => {
-    const km = (s.distance||0)/1000;
-    return km >= exploreDistMin && (exploreDistMax >= cap || km <= exploreDistMax);
-  });
+  const km = (s.distance||0)/1000;
+  return km >= exploreDistMin && km <= exploreDistMax;
+});
 
   document.getElementById('exploreBadge').textContent = list.length;
 
