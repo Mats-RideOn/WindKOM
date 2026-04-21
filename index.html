@@ -553,29 +553,29 @@ const degToDir = deg => DIRS[Math.round(((deg % 360) + 360) / 45) % 8];
 // WIND BEREKENINGEN
 // ─────────────────────────────────────────
 function calcWindScore(windDeg, windSpeedKmh, segBearing) {
-  // diff = 0° → wind recht van achter (ideaal)
-  // diff = 90° → zijwind
-  // diff = 180° → recht van voor (tegenwind)
+  // windDeg = vanwaar wind komt (meteorologisch)
+  // segBearing = waarheen je fietst
+  // Meewind = wind van achter = windDeg en segBearing zijn tegenovergesteld (diff ≈ 180°)
+  // Tegenwind = wind van voor = windDeg ≈ segBearing (diff ≈ 0°)
   const diff = ((windDeg - segBearing) + 360) % 360;
   const absDiff = diff > 180 ? 360 - diff : diff; // 0–180°
 
-  // Richtingsfactor: 1.0 bij rug, 0.0 bij zijwind (90°), negatief bij tegenwind
-  // Gebruik kwadraat zodat de curve soepeler daalt richting zijwind
-  // cos(0°)=1, cos(90°)=0, cos(180°)=-1
-  const dirFactor = Math.cos(absDiff * Math.PI / 180);
+  // absDiff = 0°  → tegenwind (wind van voor)
+  // absDiff = 180° → meewind (wind van achter)
+  // Meewindvoordeel: cos(180° - absDiff) = -cos(absDiff)
+  // Bij meewind (180°): -cos(180°) = 1 → max voordeel
+  // Bij tegenwind (0°): -cos(0°) = -1 → geen voordeel
+  const dirFactor = -Math.cos(absDiff * Math.PI / 180); // -1 tot +1
 
-  // Alleen positieve richtingsfactor telt (zijwind en tegenwind geven geen voordeel)
-  const dirScore = Math.max(0, dirFactor); // 0–1
+  const dirScore = Math.max(0, dirFactor); // 0–1, negatief = geen voordeel
 
-  // Snelheidsfactor: lineair tot 40 km/u = max, maar al bij 10 km/u merkbaar
-  const speedFactor = Math.min(windSpeedKmh / 40, 1); // 0–1
+  // Snelheidsfactor: lineair tot 40 km/u
+  const speedFactor = Math.min(windSpeedKmh / 40, 1);
 
-  // Combinatie: richting weegt zwaarder dan snelheid
+  // Vol in de rug + sterke wind = 100
   // Vol in de rug + zwakke wind > zijwind + sterke wind
-  // Formule: 70% richting + 30% snelheid, daarna kwadraat voor scherpere top
   const combined = dirScore * (0.6 + 0.4 * speedFactor);
 
-  // Schaal naar 0–100, minimum 4 om altijd iets te tonen
   return Math.round(Math.max(4, Math.min(100, combined * 100)));
 }
 
