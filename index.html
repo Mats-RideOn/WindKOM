@@ -1512,9 +1512,11 @@ function renderExplore(filter) {
   else if (filter === 'pr') list = list.filter(s => s.prTime);
 
   // Segmentlengte filter
-  list = list.filter(s => {
+  const sMax = document.getElementById('exploreSliderMax');
+const cap = sMax ? parseFloat(sMax.max) : 999;
+list = list.filter(s => {
   const km = (s.distance||0)/1000;
-  return km >= exploreDistMin && km <= exploreDistMax;
+  return km >= exploreDistMin && (exploreDistMax >= cap || km <= exploreDistMax);
 });
 
   document.getElementById('exploreBadge').textContent = list.length;
@@ -1615,13 +1617,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') searchLocation();
   });
 
-  // Explore slider alvast klaarzetten met listeners (voor het laden)
-  const expMin = document.getElementById('exploreSliderMin');
-  const expMax = document.getElementById('exploreSliderMax');
-  if (expMin && expMax) {
-    expMin.addEventListener('input', () => updateExploreSlider());
-    expMax.addEventListener('input', () => updateExploreSlider());
-  }
 
   checkAuth();
 });
