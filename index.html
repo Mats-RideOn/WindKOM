@@ -1026,7 +1026,6 @@ function renderSegments(filter) {
   grid.innerHTML = list.map((s,i) => {
     const komSecs = parseKomTime(s.komTime);
     const prSecs  = (s.prTime != null) ? parseInt(s.prTime) : null;
-    if (!komSecs) console.log(`KOM ontbreekt [${s.name}]: komTime=${JSON.stringify(s.komTime)} xoms=${JSON.stringify(s._xomsRaw)}`);
 
     const prDisplay  = prSecs  ? formatTime(prSecs)  : '—';
     // Formatteer KOM netjes — als komSecs bekend gebruik formatTime, anders raw string
