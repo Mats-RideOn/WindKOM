@@ -553,11 +553,30 @@ const degToDir = deg => DIRS[Math.round(((deg % 360) + 360) / 45) % 8];
 // WIND BEREKENINGEN
 // ─────────────────────────────────────────
 function calcWindScore(windDeg, windSpeedKmh, segBearing) {
+  // diff = 0° → wind recht van achter (ideaal)
+  // diff = 90° → zijwind
+  // diff = 180° → recht van voor (tegenwind)
   const diff = ((windDeg - segBearing) + 360) % 360;
-  const advantage = -Math.cos(diff * Math.PI / 180);
-  const speedFactor = Math.min(windSpeedKmh / 35, 1);
-  const raw = ((advantage + 1) / 2) * 100 * (0.35 + 0.65 * speedFactor);
-  return Math.round(Math.max(4, Math.min(97, raw)));
+  const absDiff = diff > 180 ? 360 - diff : diff; // 0–180°
+
+  // Richtingsfactor: 1.0 bij rug, 0.0 bij zijwind (90°), negatief bij tegenwind
+  // Gebruik kwadraat zodat de curve soepeler daalt richting zijwind
+  // cos(0°)=1, cos(90°)=0, cos(180°)=-1
+  const dirFactor = Math.cos(absDiff * Math.PI / 180);
+
+  // Alleen positieve richtingsfactor telt (zijwind en tegenwind geven geen voordeel)
+  const dirScore = Math.max(0, dirFactor); // 0–1
+
+  // Snelheidsfactor: lineair tot 40 km/u = max, maar al bij 10 km/u merkbaar
+  const speedFactor = Math.min(windSpeedKmh / 40, 1); // 0–1
+
+  // Combinatie: richting weegt zwaarder dan snelheid
+  // Vol in de rug + zwakke wind > zijwind + sterke wind
+  // Formule: 70% richting + 30% snelheid, daarna kwadraat voor scherpere top
+  const combined = dirScore * (0.6 + 0.4 * speedFactor);
+
+  // Schaal naar 0–100, minimum 4 om altijd iets te tonen
+  return Math.round(Math.max(4, Math.min(100, combined * 100)));
 }
 
 function windTypeLabel(windDeg, segBearing) {
@@ -688,7 +707,7 @@ async function loadWindPerSegment() {
       s.segWindSpeed = w.speed;
       s.segWindDeg   = w.deg;
       s.windScore    = calcWindScore(w.deg, w.speed, bearing);
-      s.status       = s.windScore >= 68 ? 'ideal' : s.windScore >= 38 ? 'good' : 'none';
+      s.status       = s.windScore >= 65 ? 'ideal' : s.windScore >= 35 ? 'good' : 'none';
       s.windLabel    = windTypeLabel(w.deg, bearing);
       const delta = Math.round((s.windScore - 50) / 5);
       s.prChance = (delta >= 0 ? '+' : '') + delta + '%';
@@ -1087,7 +1106,7 @@ function renderSegments(filter) {
 
       <div class="wind-score-row">
         <span class="wind-score-label">Windvoordeel-score</span>
-        <span class="wind-score-val" style="color:${s.windScore>=68?'var(--green)':s.windScore>=38?'var(--yellow)':'var(--red)'}">${s.windScore}/100</span>
+        <span class="wind-score-val" style="color:${s.windScore>=65?'var(--green)':s.windScore>=35?'var(--yellow)':'var(--red)'}">${s.windScore}/100</span>
       </div>
       <div class="score-bar-bg">
         <div class="score-bar-fill ${s.status==='ideal'?'fill-ideal':s.status==='good'?'fill-good':'fill-none'}" style="width:${s.windScore}%"></div>
@@ -1453,7 +1472,7 @@ async function loadExplore() {
         segWindSpeed: w.speed,
         segWindDeg:   w.deg,
         windScore,
-        status:     windScore >= 68 ? 'ideal' : windScore >= 38 ? 'good' : 'none',
+        status:     windScore >= 65 ? 'ideal' : windScore >= 35 ? 'good' : 'none',
         windLabel:  windTypeLabel(w.deg, bearing),
       });
     });
@@ -1461,7 +1480,7 @@ async function loadExplore() {
     progLabel.textContent = `Wind: ${Math.min((ci+1)*20, allRaw.length)}/${allRaw.length} klaar…`;
   }
 
-  exploreSegments = exploreSegments.filter(s => s.status === 'ideal');
+  exploreSegments = exploreSegments.filter(s => s.windScore >= 60);
   exploreSegments.sort((a, b) => b.windScore - a.windScore);
   initExploreSlider();
   progFill.style.width = '100%';
@@ -1556,7 +1575,7 @@ function renderExplore(filter) {
       </div>
       <div class="wind-score-row">
         <span class="wind-score-label">Windvoordeel-score</span>
-        <span class="wind-score-val" style="color:${s.windScore>=68?'var(--green)':s.windScore>=38?'var(--yellow)':'var(--red)'}">${s.windScore}/100</span>
+        <span class="wind-score-val" style="color:${s.windScore>=65?'var(--green)':s.windScore>=35?'var(--yellow)':'var(--red)'}">${s.windScore}/100</span>
       </div>
       <div class="score-bar-bg"><div class="score-bar-fill ${s.status==='ideal'?'fill-ideal':s.status==='good'?'fill-good':'fill-none'}" style="width:${s.windScore}%"></div></div>
       <div class="card-bottom">
