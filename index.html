@@ -1433,23 +1433,33 @@ async function loadExplore() {
     progFill.style.width = `${10 + (i / cells.length) * 40}%`;
   }
 
-  progLabel.textContent = `Wind berekenen voor ${allRaw.length} segmenten…`;
+  progLabel.textContent = `Wind + details ophalen voor ${allRaw.length} segmenten…`;
   progFill.style.width = '55%';
 
-  // Wind per segment (max 20 tegelijk om rate limit te vermijden)
   const chunks = [];
-  for (let i = 0; i < allRaw.length; i += 20) chunks.push(allRaw.slice(i, i + 20));
+  for (let i = 0; i < allRaw.length; i += 5) chunks.push(allRaw.slice(i, i + 5));
 
   for (let ci = 0; ci < chunks.length; ci++) {
     const chunk = chunks[ci];
-    const windResults = await Promise.allSettled(chunk.map(s => {
-      const lat = s.start_latlng[0] + (s.end_latlng[0] - s.start_latlng[0]) / 2;
-      const lng = s.start_latlng[1] + (s.end_latlng[1] - s.start_latlng[1]) / 2;
-      return fetchWindForSegment(lat, lng);
-    }));
+
+    const [windResults, detailResults] = await Promise.all([
+      Promise.allSettled(chunk.map(s => {
+        const lat = s.start_latlng[0] + (s.end_latlng[0] - s.start_latlng[0]) / 2;
+        const lng = s.start_latlng[1] + (s.end_latlng[1] - s.start_latlng[1]) / 2;
+        return fetchWindForSegment(lat, lng);
+      })),
+      Promise.allSettled(chunk.map(s =>
+        fetch(`/api/explore`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ url: `https://www.strava.com/api/v3/segments/${s.id}` }),
+        }).then(r => r.json())
+      ))
+    ]);
 
     windResults.forEach((res, i) => {
       const raw = chunk[i];
+      const detail = detailResults[i].status === 'fulfilled' ? detailResults[i].value : {};
       const bearing = segmentBearing(raw.start_latlng[0], raw.start_latlng[1], raw.end_latlng[0], raw.end_latlng[1]);
       const w = res.status === 'fulfilled' ? res.value : { speed: 0, deg: 0 };
       const windScore = calcWindScore(w.deg, w.speed, bearing);
@@ -1458,17 +1468,17 @@ async function loadExplore() {
         name:       raw.name,
         distance:   raw.distance,
         elevation:  raw.total_elevation_gain ?? null,
-        elevHigh:   raw.elevation_high ?? null,
-        elevLow:    raw.elevation_low  ?? null,
+        elevHigh:   detail.elevation_high ?? null,
+        elevLow:    detail.elevation_low  ?? null,
         avgGrade:   raw.avg_grade ?? raw.average_grade ?? 0,
         type:       raw.activity_type ?? 'Ride',
         startLat:   raw.start_latlng[0],
         startLng:   raw.start_latlng[1],
         endLat:     raw.end_latlng[0],
         endLng:     raw.end_latlng[1],
-        prTime:  raw.athlete_segment_stats?.pr_elapsed_time ?? raw.athlete_pr_effort?.elapsed_time ?? null,
-        komTime: raw.xoms?.kom ?? raw.xoms?.overall ?? raw.xoms?.qom ?? null,
-        polyline:   raw.points ?? null,
+        prTime:     detail.athlete_segment_stats?.pr_elapsed_time ?? null,
+        komTime:    detail.xoms?.kom ?? detail.xoms?.overall ?? detail.xoms?.qom ?? null,
+        polyline:   detail.map?.polyline ?? detail.map?.summary_polyline ?? raw.points ?? null,
         segWindSpeed: w.speed,
         segWindDeg:   w.deg,
         windScore,
@@ -1477,7 +1487,7 @@ async function loadExplore() {
       });
     });
     progFill.style.width = `${55 + ((ci+1)/chunks.length) * 40}%`;
-    progLabel.textContent = `Wind: ${Math.min((ci+1)*20, allRaw.length)}/${allRaw.length} klaar…`;
+    progLabel.textContent = `Details: ${Math.min((ci+1)*5, allRaw.length)}/${allRaw.length} klaar…`;
   }
 
   exploreSegments = exploreSegments.filter(s => s.windScore >= 60);
